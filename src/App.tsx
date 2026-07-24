@@ -4,6 +4,7 @@ import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
 import { buildTimeline, REGEN_INTERVAL_SEC, type AttackEvent, type RegenEvent } from './simulator.ts'
 import { hpBar } from './hpBar.ts'
+import { mpBar } from './mpBar.ts'
 import { useCombatantStats } from './useCombatantStats.ts'
 import CombatantPanel from './components/CombatantPanel.tsx'
 import { Button } from '@/components/ui/button'
@@ -221,6 +222,8 @@ function App() {
                               {event.label}
                               {' ← '}
                               <span className="font-bold text-sky-400">+{event.mpAmount}</span>
+                              {' '}
+                              <span className="text-neutral-500">{mpBar(event.mpAfter ?? 0)}</span>
                               {' '}
                               <span className="text-neutral-500">{event.mpAfter}</span>
                             </span>
