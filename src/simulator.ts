@@ -42,8 +42,8 @@ export type TimelineEvent = AttackEvent | RegenEvent | VictoryEvent
 
 export interface CombatantInput {
   label: string
-  baseAttackSpeed: number
-  attackSpeedPercent: number
+  baseSpeed: number
+  speedPercent: number
   attackDamage: number
   hp: number
   critChance: number
@@ -80,8 +80,8 @@ export const REGEN_INTERVAL_SEC = 1
 const EPSILON = 1e-9
 
 function buildCombatantAttackSlots(attacker: CombatantInput, target: CombatantInput): RawAttack[] {
-  const effectiveAttackSpeed = attacker.baseAttackSpeed * (1 + attacker.attackSpeedPercent / 100)
-  const interval = 1 / effectiveAttackSpeed
+  const effectiveSpeed = attacker.baseSpeed * (1 + attacker.speedPercent / 100)
+  const interval = 1 / effectiveSpeed
   const attacks: RawAttack[] = []
 
   for (let t = interval; t <= TIMELINE_DURATION_SEC + EPSILON; t += interval) {

@@ -17,7 +17,7 @@ export const CORE_STATS: Stat[] = [
 
 export const ATTRIBUTES: Stat[] = [
   { key: 'block', label: 'Block', min: 0, max: 100, unit: '%' },
-  { key: 'attackSpeed', label: 'Att Speed', min: 0, max: 40, unit: '%' },
+  { key: 'speed', label: 'Speed', min: 0, max: 40, unit: '%' },
   { key: 'critChance', label: 'Crit Chance', min: 0, max: 100, unit: '%' },
   { key: 'critDamage', label: 'Crit Damage', min: 0, max: 80, unit: '%', base: 20 },
   { key: 'healthReg', label: 'HP Regen', min: 0, max: 4, unit: '%' },

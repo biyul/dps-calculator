@@ -28,8 +28,8 @@ function App() {
       buildTimeline([
         {
           label: 'Player',
-          baseAttackSpeed: getBaseStat('attackSpeed'),
-          attackSpeedPercent: player.stats.attackSpeed,
+          baseSpeed: getBaseStat('speed'),
+          speedPercent: player.stats.speed,
           attackDamage: getCombatStat('attack', player.stats),
           hp: getCombatStat('hp', player.stats),
           critChance: getCombatStat('critChance', player.stats),
@@ -45,8 +45,8 @@ function App() {
         },
         {
           label: 'Foe',
-          baseAttackSpeed: getBaseStat('attackSpeed'),
-          attackSpeedPercent: foe.stats.attackSpeed,
+          baseSpeed: getBaseStat('speed'),
+          speedPercent: foe.stats.speed,
           attackDamage: getCombatStat('attack', foe.stats),
           hp: getCombatStat('hp', foe.stats),
           critChance: getCombatStat('critChance', foe.stats),
@@ -62,7 +62,7 @@ function App() {
         },
       ]),
     [
-      player.stats.attackSpeed,
+      player.stats.speed,
       player.stats.strength,
       player.stats.dexterity,
       player.stats.intelligence,
@@ -73,7 +73,7 @@ function App() {
       player.stats.lifesteal,
       player.abilities,
       player.abilityOrder,
-      foe.stats.attackSpeed,
+      foe.stats.speed,
       foe.stats.strength,
       foe.stats.dexterity,
       foe.stats.intelligence,

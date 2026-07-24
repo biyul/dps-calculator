@@ -62,7 +62,7 @@ export default function CombatantPanel({
               <tr key={stat.key} className="border-b last:border-b-0">
                 <td className="py-1 font-semibold">{stat.label}</td>
                 <td className="py-1 text-right tabular-nums">
-                  {getCombatStat(stat.key, stats)}
+                  {getCombatStat(stat.key, stats).toFixed(stat.decimals ?? 0)}
                   {stat.unit ?? ''}
                 </td>
               </tr>

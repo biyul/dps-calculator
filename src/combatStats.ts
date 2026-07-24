@@ -7,6 +7,7 @@ export interface CombatStat {
   key: string
   label: string
   unit?: string
+  decimals?: number
 }
 
 export const COMBAT_STATS: CombatStat[] = [
@@ -19,6 +20,7 @@ export const COMBAT_STATS: CombatStat[] = [
   { key: 'lifesteal', label: 'Lifesteal', unit: '%' },
   { key: 'healthReg', label: 'HP Regen', unit: '%' },
   { key: 'mpRegen', label: 'MP Regen' },
+  { key: 'speed', label: 'Speed', unit: '%' },
 ]
 
 export function getCombatStat(key: string, stats: StatValues): number {
@@ -41,6 +43,8 @@ export function getCombatStat(key: string, stats: StatValues): number {
       return getBaseStat('mpRegen') + stats.intelligence
     case 'mp':
       return getBaseStat('mp')
+    case 'speed':
+      return 100 + stats.speed
     default:
       throw new Error(`Unknown combat stat: ${key}`)
   }
