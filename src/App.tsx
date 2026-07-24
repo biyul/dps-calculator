@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ArrowLeft, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
@@ -12,23 +12,21 @@ import {
   type RegenEvent,
   type TimelineEvent,
 } from './simulator.ts'
-import { hpBar } from './hpBar.ts'
-import { mpBar } from './mpBar.ts'
 import { useCombatantStats, type AbilityValues, type StatValues } from './useCombatantStats.ts'
 import { useMetaStats, META_STATS } from './useMetaStats.ts'
+import { eventOrder } from './eventOrder.ts'
 import CombatantStatsPanel from './components/CombatantStatsPanel.tsx'
 import CombatantCorePanel from './components/CombatantCorePanel.tsx'
 import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
 import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import FoeCard from './components/FoeCard.tsx'
+import EventLog from './components/EventLog.tsx'
+import EventColumns from './components/EventColumns.tsx'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
-
-function eventOrder(event: AttackEvent | RegenEvent): number {
-  if (event.kind === 'attack') return event.attackerLabel === 'Player' ? 0 : 1
-  return 2
-}
+import { Toggle } from '@/components/ui/toggle'
+import { ToggleGroup } from '@/components/ui/toggle-group'
 
 function buildCombatantInput(
   label: string,
@@ -57,6 +55,7 @@ function buildCombatantInput(
 }
 
 type Screen = 'fight' | 'stats' | 'core' | 'abilities' | 'equipment'
+type LogView = 'log' | 'columns'
 
 const NAV_ITEMS: { key: Screen; label: string }[] = [
   { key: 'fight', label: 'Fight' },
@@ -73,6 +72,7 @@ function App() {
   const [screen, setScreen] = useState<Screen>('fight')
   const [selectedFoeKey, setSelectedFoeKey] = useState<string | null>(null)
   const [animateLog, setAnimateLog] = useState(false)
+  const [logView, setLogView] = useState<LogView>('log')
   const [visibleGroupCount, setVisibleGroupCount] = useState(0)
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
 
@@ -163,13 +163,6 @@ function App() {
         : undefined
       : victoryEvent
 
-  const logContainerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const container = logContainerRef.current
-    if (container) container.scrollTop = container.scrollHeight
-  }, [displayedGroups.length, visibleVictoryEvent])
-
   return (
     <div className="px-4 pb-6">
       <div className="relative py-5">
@@ -211,8 +204,8 @@ function App() {
       )}
 
       {screen === 'fight' && selectedFoeKey && (
-        <div className="mx-auto w-full max-w-md">
-          <div className="mb-2 flex items-center justify-center gap-3">
+        <div className={`mx-auto w-full ${logView === 'columns' ? 'max-w-4xl' : 'max-w-md'}`}>
+          <div className="mb-2 flex flex-wrap items-center justify-center gap-3">
             <Button
               type="button"
               variant="outline"
@@ -240,143 +233,27 @@ function App() {
               </Label>
               <Switch id="animate-log" checked={animateLog} onCheckedChange={setAnimateLog} />
             </div>
+            <ToggleGroup
+              value={[logView]}
+              onValueChange={(values) => {
+                const next = values[0]
+                if (next) setLogView(next as LogView)
+              }}
+            >
+              <Toggle value="log" aria-label="Single log view">
+                Log
+              </Toggle>
+              <Toggle value="columns" aria-label="Three column view">
+                Columns
+              </Toggle>
+            </ToggleGroup>
           </div>
-          <div
-            ref={logContainerRef}
-            className="flex max-h-[80vh] flex-col divide-y overflow-y-auto font-mono text-sm whitespace-nowrap"
-          >
-            {displayedGroups.map((group, groupIndex) => {
-              if (group[0].kind === 'regen') {
-                return (
-                  <div key={groupIndex} className="flex flex-col py-1.5 first:pt-0 last:pb-0">
-                    <span className="text-muted-foreground">t={group[0].time.toFixed(2)}s</span>
-                    <span>(Regen)</span>
-                    {group.map((event, index) => {
-                      if (event.kind !== 'regen') return null
-                      const percent =
-                        event.hpAfter !== undefined && event.maxHp !== undefined
-                          ? Math.round((event.hpAfter / event.maxHp) * 100)
-                          : undefined
-                      return (
-                        <div key={index} className="flex flex-col">
-                          {event.healAmount !== undefined && (
-                            <span>
-                              {event.label}
-                              {' ← '}
-                              <span className="font-bold text-green-600">+{event.healAmount}</span>
-                              {' '}
-                              <span className="text-neutral-500">{hpBar(percent ?? 0)}</span>
-                              {' '}
-                              <span className="text-neutral-500">{event.hpAfter}</span>
-                            </span>
-                          )}
-                          {event.mpAmount !== undefined && (
-                            <span>
-                              {event.label}
-                              {' ← '}
-                              <span className="font-bold text-sky-400">+{event.mpAmount}</span>
-                              {' '}
-                              <span className="text-neutral-500">{mpBar(event.mpAfter ?? 0)}</span>
-                              {' '}
-                              <span className="text-neutral-500">{event.mpAfter}</span>
-                            </span>
-                          )}
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              }
 
-              return (
-                <div key={groupIndex} className="flex flex-col gap-3 py-1.5 first:pt-0 last:pb-0">
-                  {group.map((event, index) => {
-                    if (event.kind === 'regen') return null
-
-                    if (event.isBlocked) {
-                      return (
-                        <div key={index} className="flex flex-col">
-                          <span className="text-muted-foreground">t={event.time.toFixed(2)}s</span>
-                          <span>
-                            {event.attackerLabel}
-                            {': '}
-                            <span className="font-bold text-black dark:text-neutral-300">
-                              {event.abilityLabel ?? 'Attack'}
-                            </span>
-                            {'!'}
-                            {event.isCrit && (
-                              <>
-                                {' '}
-                                <span className="font-bold text-orange-500">CRIT!</span>
-                              </>
-                            )}
-                          </span>
-                          <span>
-                            {event.targetLabel}
-                            {': '}
-                            <span className="text-blue-500">BLOCK!</span>
-                          </span>
-                        </div>
-                      )
-                    }
-
-                    const percent = Math.round((event.targetHpAfter / event.targetMaxHp) * 100)
-                    return (
-                      <div key={index} className="flex flex-col">
-                        <span className="text-muted-foreground">t={event.time.toFixed(2)}s</span>
-                        <span>
-                          {event.attackerLabel}
-                          {': '}
-                          <span className="font-bold dark:text-neutral-300">
-                            {event.abilityLabel ?? 'Attack'}
-                          </span>
-                          {'!'}
-                          {event.isCrit && (
-                            <>
-                              {' '}
-                              <span className="font-bold text-orange-500">CRIT!</span>
-                            </>
-                          )}
-                        </span>
-                        <span>
-                          {event.targetLabel}
-                          {' ← '}
-                          <span
-                            className={`font-bold ${event.abilityLabel ? 'text-purple-500' : 'text-yellow-600'}`}
-                          >
-                            -{event.damage}
-                          </span>
-                          {' '}
-                          <span className="text-neutral-500">{hpBar(percent)}</span>
-                          {' '}
-                          <span className="text-neutral-500">{event.targetHpAfter}</span>
-                        </span>
-                        {event.lifesteal && (
-                          <span>
-                            {event.attackerLabel}
-                            {' ← '}
-                            <span className="font-bold text-green-600">
-                              +{event.lifesteal.healAmount}
-                            </span>
-                            {' '}
-                            <span className="text-neutral-500">
-                              {hpBar(
-                                Math.round(
-                                  (event.lifesteal.attackerHpAfter / event.lifesteal.attackerMaxHp) * 100,
-                                ),
-                              )}
-                            </span>
-                            {' '}
-                            <span className="text-neutral-500">{event.lifesteal.attackerHpAfter}</span>
-                          </span>
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              )
-            })}
-          </div>
+          {logView === 'log' ? (
+            <EventLog groups={displayedGroups} />
+          ) : (
+            <EventColumns groups={displayedGroups} />
+          )}
 
           {visibleVictoryEvent && (
             <div className="mt-3 flex flex-col font-mono text-sm whitespace-nowrap">
