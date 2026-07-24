@@ -22,9 +22,9 @@ export const COMBAT_STATS: CombatStat[] = [
 export function getCombatStat(key: string, stats: StatValues): number {
   switch (key) {
     case 'attack':
-      return getBaseStat('attack')
+      return getBaseStat('attack') + stats.strength
     case 'hp':
-      return getBaseStat('hp')
+      return getBaseStat('hp') + stats.strength * 10
     case 'block':
       return stats.block
     case 'critChance':

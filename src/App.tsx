@@ -43,6 +43,7 @@ function App() {
       ]),
     [
       player.stats.attackSpeed,
+      player.stats.strength,
       player.stats.dexterity,
       player.stats.critChance,
       player.stats.critDamage,
@@ -50,6 +51,7 @@ function App() {
       player.stats.healthReg,
       player.stats.lifesteal,
       foe.stats.attackSpeed,
+      foe.stats.strength,
       foe.stats.dexterity,
       foe.stats.critChance,
       foe.stats.critDamage,
