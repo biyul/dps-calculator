@@ -75,7 +75,7 @@ interface RawRegen {
 type RawEvent = RawAttack | RawRegen
 
 const TIMELINE_DURATION_SEC = 15
-const REGEN_INTERVAL_SEC = 1
+export const REGEN_INTERVAL_SEC = 1
 const EPSILON = 1e-9
 
 function buildCombatantAttackSlots(attacker: CombatantInput, target: CombatantInput): RawAttack[] {
