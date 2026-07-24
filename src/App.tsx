@@ -29,6 +29,8 @@ function App() {
           lifestealPercent: getCombatStat('lifesteal', player.stats),
           mpRegen: getCombatStat('mpRegen', player.stats),
           mp: getCombatStat('mp', player.stats),
+          intelligence: player.stats.intelligence,
+          abilities: player.abilities,
         },
         {
           label: 'Foe',
@@ -43,6 +45,8 @@ function App() {
           lifestealPercent: getCombatStat('lifesteal', foe.stats),
           mpRegen: getCombatStat('mpRegen', foe.stats),
           mp: getCombatStat('mp', foe.stats),
+          intelligence: foe.stats.intelligence,
+          abilities: foe.abilities,
         },
       ]),
     [
@@ -55,6 +59,7 @@ function App() {
       player.stats.block,
       player.stats.healthReg,
       player.stats.lifesteal,
+      player.abilities,
       foe.stats.attackSpeed,
       foe.stats.strength,
       foe.stats.dexterity,
@@ -64,6 +69,7 @@ function App() {
       foe.stats.block,
       foe.stats.healthReg,
       foe.stats.lifesteal,
+      foe.abilities,
       rerunCount,
     ],
   )
@@ -160,7 +166,9 @@ function App() {
                     <span>
                       {event.attackerLabel}
                       {': '}
-                      <span className="font-bold text-black dark:text-neutral-300">Attack</span>
+                      <span className="font-bold text-black dark:text-neutral-300">
+                        {event.abilityLabel ?? 'Attack'}
+                      </span>
                       {'!'}
                       {event.isCrit && (
                         <>
@@ -185,7 +193,9 @@ function App() {
                   <span>
                     {event.attackerLabel}
                     {': '}
-                    <span className="font-bold dark:text-neutral-300">Attack</span>
+                    <span className="font-bold dark:text-neutral-300">
+                      {event.abilityLabel ?? 'Attack'}
+                    </span>
                     {'!'}
                     {event.isCrit && (
                       <>
@@ -197,7 +207,11 @@ function App() {
                   <span>
                     {event.targetLabel}
                     {' ← '}
-                    <span className="font-bold text-yellow-600">-{event.damage}</span>
+                    <span
+                      className={`font-bold ${event.abilityLabel ? 'text-purple-500' : 'text-yellow-600'}`}
+                    >
+                      -{event.damage}
+                    </span>
                     {' '}
                     <span className="text-neutral-500">{hpBar(percent)}</span>
                     {' '}

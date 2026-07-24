@@ -11,7 +11,7 @@ export const BASE_STATS: BaseStat[] = [
   { key: 'attack', label: 'Attack', value: 100 },
   { key: 'hp', label: 'HP', value: 1000 },
   { key: 'attackSpeed', label: 'Attack Speed', value: 1, unit: '/s', decimals: 2 },
-  { key: 'mpRegen', label: 'MP Regen', value: 10 },
+  { key: 'mpRegen', label: 'MP Regen', value: 25 },
   { key: 'mp', label: 'MP', value: 0 },
 ]
 

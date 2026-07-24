@@ -1,3 +1,6 @@
+import { ABILITIES } from './abilities.ts'
+import type { AbilityValues } from './useCombatantStats.ts'
+
 export interface LifestealHeal {
   healAmount: number
   attackerHpAfter: number
@@ -15,6 +18,7 @@ export interface AttackEvent {
   targetHpAfter: number
   targetMaxHp: number
   lifesteal?: LifestealHeal
+  abilityLabel?: string
 }
 
 export interface RegenEvent {
@@ -49,6 +53,8 @@ export interface CombatantInput {
   lifestealPercent: number
   mpRegen: number
   mp: number
+  intelligence: number
+  abilities: AbilityValues
 }
 
 interface RawAttack {
@@ -56,9 +62,6 @@ interface RawAttack {
   time: number
   attackerLabel: string
   targetLabel: string
-  damage: number
-  isCrit: boolean
-  isBlocked: boolean
 }
 
 interface RawRegen {
@@ -75,32 +78,27 @@ const TIMELINE_DURATION_SEC = 15
 const REGEN_INTERVAL_SEC = 1
 const EPSILON = 1e-9
 
-function buildCombatantAttacks(attacker: CombatantInput, target: CombatantInput): RawAttack[] {
+function buildCombatantAttackSlots(attacker: CombatantInput, target: CombatantInput): RawAttack[] {
   const effectiveAttackSpeed = attacker.baseAttackSpeed * (1 + attacker.attackSpeedPercent / 100)
   const interval = 1 / effectiveAttackSpeed
   const attacks: RawAttack[] = []
 
   for (let t = interval; t <= TIMELINE_DURATION_SEC + EPSILON; t += interval) {
-    const isBlocked = Math.random() * 100 < target.blockChance
-    const isCrit = Math.random() * 100 < attacker.critChance
-    const damage = isBlocked
-      ? 0
-      : isCrit
-        ? Math.round(attacker.attackDamage * (1 + attacker.critDamageMultiplier / 100))
-        : attacker.attackDamage
-
     attacks.push({
       kind: 'attack',
       time: Math.round(t * 100) / 100,
       attackerLabel: attacker.label,
       targetLabel: target.label,
-      damage,
-      isCrit,
-      isBlocked,
     })
   }
 
   return attacks
+}
+
+function pickAbility(attacker: CombatantInput, mpAvailable: number) {
+  return ABILITIES.find(
+    (ability) => attacker.abilities[ability.key] && mpAvailable >= (ability.mpCost ?? 0),
+  )
 }
 
 function buildCombatantRegenTicks(combatant: CombatantInput): RawRegen[] {
@@ -130,12 +128,13 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
   const [a, b] = combatants
 
   const events: RawEvent[] = [
-    ...buildCombatantAttacks(a, b),
-    ...buildCombatantAttacks(b, a),
+    ...buildCombatantAttackSlots(a, b),
+    ...buildCombatantAttackSlots(b, a),
     ...buildCombatantRegenTicks(a),
     ...buildCombatantRegenTicks(b),
   ].sort((x, y) => x.time - y.time)
 
+  const combatantByLabel: Record<string, CombatantInput> = { [a.label]: a, [b.label]: b }
   const maxHp: Record<string, number> = { [a.label]: a.hp, [b.label]: b.hp }
   const currentHp: Record<string, number> = { ...maxHp }
   const currentMp: Record<string, number> = { [a.label]: a.mp, [b.label]: b.mp }
@@ -167,12 +166,32 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
       continue
     }
 
-    currentHp[event.targetLabel] = Math.max(0, currentHp[event.targetLabel] - event.damage)
+    const attacker = combatantByLabel[event.attackerLabel]
+    const target = combatantByLabel[event.targetLabel]
+
+    const ability = pickAbility(attacker, currentMp[attacker.label])
+    if (ability) {
+      currentMp[attacker.label] -= ability.mpCost ?? 0
+    }
+
+    const baseDamage = ability
+      ? (ability.baseDamage ?? 0) + (ability.intScaling ?? 0) * attacker.intelligence
+      : attacker.attackDamage
+
+    const isBlocked = Math.random() * 100 < target.blockChance
+    const isCrit = Math.random() * 100 < attacker.critChance
+    const damage = isBlocked
+      ? 0
+      : isCrit
+        ? Math.round(baseDamage * (1 + attacker.critDamageMultiplier / 100))
+        : Math.round(baseDamage)
+
+    currentHp[event.targetLabel] = Math.max(0, currentHp[event.targetLabel] - damage)
 
     let lifesteal: LifestealHeal | undefined
-    if (!event.isBlocked) {
+    if (!isBlocked) {
       const lifestealPercent = lifestealByLabel[event.attackerLabel]
-      const healAmount = Math.round(event.damage * (lifestealPercent / 100))
+      const healAmount = Math.round(damage * (lifestealPercent / 100))
       if (healAmount > 0) {
         currentHp[event.attackerLabel] = Math.min(
           maxHp[event.attackerLabel],
@@ -191,12 +210,13 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
       time: event.time,
       attackerLabel: event.attackerLabel,
       targetLabel: event.targetLabel,
-      damage: event.damage,
-      isCrit: event.isCrit,
-      isBlocked: event.isBlocked,
+      damage,
+      isCrit,
+      isBlocked,
       targetHpAfter: currentHp[event.targetLabel],
       targetMaxHp: maxHp[event.targetLabel],
       lifesteal,
+      abilityLabel: ability?.label,
     })
 
     if (currentHp[event.targetLabel] <= 0) {

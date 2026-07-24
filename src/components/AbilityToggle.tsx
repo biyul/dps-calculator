@@ -16,6 +16,7 @@ export default function AbilityToggle({ ability, checked, onChange }: AbilityTog
         className={`font-semibold ${checked ? '' : 'text-muted-foreground/50'}`}
       >
         {ability.label}
+        {ability.mpCost !== undefined ? ` (MP: ${ability.mpCost})` : ''}
       </Label>
       <Switch id={ability.key} checked={checked} onCheckedChange={onChange} />
     </div>
