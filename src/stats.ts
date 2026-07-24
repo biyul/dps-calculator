@@ -14,13 +14,7 @@ export const STATS: Stat[] = [
   { key: 'attackSpeed', label: 'Att Speed', min: 0, max: 40, unit: '%' },
   { key: 'critChance', label: 'Crit Chance', min: 0, max: 100, unit: '%' },
   { key: 'critDamage', label: 'Crit Damage', min: 0, max: 80, unit: '%', base: 20 },
-  { key: 'skillDamage', label: 'Skill Damage', min: 0, max: 30, unit: '%' },
   { key: 'healthReg', label: 'Health Reg', min: 0, max: 4, unit: '%' },
-  { key: 'doubleChance', label: 'Double Chance', min: 0, max: 20, unit: '%' },
-  { key: 'rangedDamage', label: 'Ranged Damage', min: 0, max: 25, unit: '%' },
-  { key: 'meleeDamage', label: 'Melee Damage', min: 0, max: 25, unit: '%' },
-  { key: 'damage', label: 'Damage', min: 0, max: 15, unit: '%' },
-  { key: 'skillCooldown', label: 'Skill Cooldown', min: 0, max: 6, unit: '%' },
   { key: 'lifesteal', label: 'Lifesteal', min: 0, max: 20, unit: '%' },
 ]
 
