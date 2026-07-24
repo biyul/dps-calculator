@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { STATS, CORE_STATS } from './stats.ts'
+import { STATS, CORE_STATS, type Stat } from './stats.ts'
 import { ABILITIES } from './abilities.ts'
 
 export type StatValues = Record<string, number>
@@ -26,8 +26,11 @@ export function useCombatantStats() {
     setStats((prev) => ({ ...prev, [key]: value }))
   }
 
-  function setAllStats(mode: 'min' | 'max') {
-    setStats(Object.fromEntries(STATS.map((s) => [s.key, mode === 'max' ? s.max : 0])))
+  function setAllStats(mode: 'min' | 'max', group: Stat[] = STATS) {
+    setStats((prev) => ({
+      ...prev,
+      ...Object.fromEntries(group.map((s) => [s.key, mode === 'max' ? s.max : 0])),
+    }))
   }
 
   function toggleAbility(key: string) {

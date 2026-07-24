@@ -1,12 +1,21 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
-import { buildTimeline, REGEN_INTERVAL_SEC, type AttackEvent, type RegenEvent } from './simulator.ts'
+import {
+  buildTimeline,
+  REGEN_INTERVAL_SEC,
+  type AttackEvent,
+  type RegenEvent,
+  type TimelineEvent,
+} from './simulator.ts'
 import { hpBar } from './hpBar.ts'
 import { mpBar } from './mpBar.ts'
 import { useCombatantStats } from './useCombatantStats.ts'
-import CombatantPanel from './components/CombatantPanel.tsx'
+import CombatantStatsPanel from './components/CombatantStatsPanel.tsx'
+import CombatantCorePanel from './components/CombatantCorePanel.tsx'
+import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
+import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -16,15 +25,26 @@ function eventOrder(event: AttackEvent | RegenEvent): number {
   return 2
 }
 
+type Screen = 'fight' | 'stats' | 'core' | 'abilities' | 'equipment'
+
+const NAV_ITEMS: { key: Screen; label: string }[] = [
+  { key: 'fight', label: 'Fight' },
+  { key: 'stats', label: 'Stats' },
+  { key: 'core', label: 'Core' },
+  { key: 'abilities', label: 'Abilities' },
+  { key: 'equipment', label: 'Equipment' },
+]
+
 function App() {
   const player = useCombatantStats()
   const foe = useCombatantStats()
-  const [rerunCount, setRerunCount] = useState(0)
+  const [screen, setScreen] = useState<Screen>('fight')
   const [animateLog, setAnimateLog] = useState(false)
   const [visibleGroupCount, setVisibleGroupCount] = useState(0)
+  const [timeline, setTimeline] = useState<TimelineEvent[]>([])
 
-  const timeline = useMemo(
-    () =>
+  function runSimulation() {
+    setTimeline(
       buildTimeline([
         {
           label: 'Player',
@@ -61,32 +81,8 @@ function App() {
           abilityOrder: foe.abilityOrder,
         },
       ]),
-    [
-      player.stats.speed,
-      player.stats.strength,
-      player.stats.dexterity,
-      player.stats.intelligence,
-      player.stats.critChance,
-      player.stats.critDamage,
-      player.stats.block,
-      player.stats.healthReg,
-      player.stats.lifesteal,
-      player.abilities,
-      player.abilityOrder,
-      foe.stats.speed,
-      foe.stats.strength,
-      foe.stats.dexterity,
-      foe.stats.intelligence,
-      foe.stats.critChance,
-      foe.stats.critDamage,
-      foe.stats.block,
-      foe.stats.healthReg,
-      foe.stats.lifesteal,
-      foe.abilities,
-      foe.abilityOrder,
-      rerunCount,
-    ],
-  )
+    )
+  }
 
   const logEvents = timeline.filter(
     (e): e is AttackEvent | RegenEvent => e.kind === 'attack' || e.kind === 'regen',
@@ -150,32 +146,21 @@ function App() {
         DPS Calculator
       </h1>
 
-      <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
-        <CombatantPanel
-          title="Player"
-          stats={player.stats}
-          powerLevel={player.powerLevel}
-          onUpdateStat={player.updateStat}
-          onSetAll={player.setAllStats}
-          abilities={player.abilities}
-          onToggleAbility={player.toggleAbility}
-          abilityOrder={player.abilityOrder}
-          onReorderAbilities={player.reorderAbilities}
-        />
+      <nav className="mb-8 flex justify-center gap-2">
+        {NAV_ITEMS.map((item) => (
+          <Button
+            key={item.key}
+            type="button"
+            variant={screen === item.key ? 'default' : 'outline'}
+            onClick={() => setScreen(item.key)}
+          >
+            {item.label}
+          </Button>
+        ))}
+      </nav>
 
-        <CombatantPanel
-          title="Foe"
-          stats={foe.stats}
-          powerLevel={foe.powerLevel}
-          onUpdateStat={foe.updateStat}
-          onSetAll={foe.setAllStats}
-          abilities={foe.abilities}
-          onToggleAbility={foe.toggleAbility}
-          abilityOrder={foe.abilityOrder}
-          onReorderAbilities={foe.reorderAbilities}
-        />
-
-        <div className="w-full max-w-md shrink-0 lg:w-88">
+      {screen === 'fight' && (
+        <div className="mx-auto w-full max-w-md">
           <div className="mb-2 flex items-center justify-center gap-3">
             <div className="text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Simulation
@@ -185,7 +170,7 @@ function App() {
               variant="outline"
               size="icon-xs"
               aria-label="Rerun simulation"
-              onClick={() => setRerunCount((n) => n + 1)}
+              onClick={runSimulation}
             >
               <RotateCw />
             </Button>
@@ -249,13 +234,40 @@ function App() {
                     if (event.kind === 'regen') return null
 
                     if (event.isBlocked) {
+                      return (
+                        <div key={index} className="flex flex-col">
+                          <span className="text-muted-foreground">t={event.time.toFixed(2)}s</span>
+                          <span>
+                            {event.attackerLabel}
+                            {': '}
+                            <span className="font-bold text-black dark:text-neutral-300">
+                              {event.abilityLabel ?? 'Attack'}
+                            </span>
+                            {'!'}
+                            {event.isCrit && (
+                              <>
+                                {' '}
+                                <span className="font-bold text-orange-500">CRIT!</span>
+                              </>
+                            )}
+                          </span>
+                          <span>
+                            {event.targetLabel}
+                            {': '}
+                            <span className="text-blue-500">BLOCK!</span>
+                          </span>
+                        </div>
+                      )
+                    }
+
+                    const percent = Math.round((event.targetHpAfter / event.targetMaxHp) * 100)
                     return (
                       <div key={index} className="flex flex-col">
                         <span className="text-muted-foreground">t={event.time.toFixed(2)}s</span>
                         <span>
                           {event.attackerLabel}
                           {': '}
-                          <span className="font-bold text-black dark:text-neutral-300">
+                          <span className="font-bold dark:text-neutral-300">
                             {event.abilityLabel ?? 'Attack'}
                           </span>
                           {'!'}
@@ -268,65 +280,38 @@ function App() {
                         </span>
                         <span>
                           {event.targetLabel}
-                          {': '}
-                          <span className="text-blue-500">BLOCK!</span>
+                          {' ← '}
+                          <span
+                            className={`font-bold ${event.abilityLabel ? 'text-purple-500' : 'text-yellow-600'}`}
+                          >
+                            -{event.damage}
+                          </span>
+                          {' '}
+                          <span className="text-neutral-500">{hpBar(percent)}</span>
+                          {' '}
+                          <span className="text-neutral-500">{event.targetHpAfter}</span>
                         </span>
+                        {event.lifesteal && (
+                          <span>
+                            {event.attackerLabel}
+                            {' ← '}
+                            <span className="font-bold text-green-600">
+                              +{event.lifesteal.healAmount}
+                            </span>
+                            {' '}
+                            <span className="text-neutral-500">
+                              {hpBar(
+                                Math.round(
+                                  (event.lifesteal.attackerHpAfter / event.lifesteal.attackerMaxHp) * 100,
+                                ),
+                              )}
+                            </span>
+                            {' '}
+                            <span className="text-neutral-500">{event.lifesteal.attackerHpAfter}</span>
+                          </span>
+                        )}
                       </div>
                     )
-                  }
-
-                  const percent = Math.round((event.targetHpAfter / event.targetMaxHp) * 100)
-                  return (
-                    <div key={index} className="flex flex-col">
-                      <span className="text-muted-foreground">t={event.time.toFixed(2)}s</span>
-                      <span>
-                        {event.attackerLabel}
-                        {': '}
-                        <span className="font-bold dark:text-neutral-300">
-                          {event.abilityLabel ?? 'Attack'}
-                        </span>
-                        {'!'}
-                        {event.isCrit && (
-                          <>
-                            {' '}
-                            <span className="font-bold text-orange-500">CRIT!</span>
-                          </>
-                        )}
-                      </span>
-                      <span>
-                        {event.targetLabel}
-                        {' ← '}
-                        <span
-                          className={`font-bold ${event.abilityLabel ? 'text-purple-500' : 'text-yellow-600'}`}
-                        >
-                          -{event.damage}
-                        </span>
-                        {' '}
-                        <span className="text-neutral-500">{hpBar(percent)}</span>
-                        {' '}
-                        <span className="text-neutral-500">{event.targetHpAfter}</span>
-                      </span>
-                      {event.lifesteal && (
-                        <span>
-                          {event.attackerLabel}
-                          {' ← '}
-                          <span className="font-bold text-green-600">
-                            +{event.lifesteal.healAmount}
-                          </span>
-                          {' '}
-                          <span className="text-neutral-500">
-                            {hpBar(
-                              Math.round(
-                                (event.lifesteal.attackerHpAfter / event.lifesteal.attackerMaxHp) * 100,
-                              ),
-                            )}
-                          </span>
-                          {' '}
-                          <span className="text-neutral-500">{event.lifesteal.attackerHpAfter}</span>
-                        </span>
-                      )}
-                    </div>
-                  )
                   })}
                 </div>
               )
@@ -342,7 +327,67 @@ function App() {
             </div>
           )}
         </div>
-      </div>
+      )}
+
+      {screen === 'stats' && (
+        <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
+          <CombatantStatsPanel title="Player" stats={player.stats} powerLevel={player.powerLevel} />
+          <CombatantStatsPanel title="Foe" stats={foe.stats} powerLevel={foe.powerLevel} />
+        </div>
+      )}
+
+      {screen === 'core' && (
+        <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
+          <CombatantCorePanel
+            title="Player"
+            stats={player.stats}
+            onUpdateStat={player.updateStat}
+            onSetAll={player.setAllStats}
+          />
+          <CombatantCorePanel
+            title="Foe"
+            stats={foe.stats}
+            onUpdateStat={foe.updateStat}
+            onSetAll={foe.setAllStats}
+          />
+        </div>
+      )}
+
+      {screen === 'abilities' && (
+        <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
+          <CombatantAbilitiesPanel
+            title="Player"
+            abilities={player.abilities}
+            onToggleAbility={player.toggleAbility}
+            abilityOrder={player.abilityOrder}
+            onReorderAbilities={player.reorderAbilities}
+          />
+          <CombatantAbilitiesPanel
+            title="Foe"
+            abilities={foe.abilities}
+            onToggleAbility={foe.toggleAbility}
+            abilityOrder={foe.abilityOrder}
+            onReorderAbilities={foe.reorderAbilities}
+          />
+        </div>
+      )}
+
+      {screen === 'equipment' && (
+        <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
+          <CombatantEquipmentPanel
+            title="Player"
+            stats={player.stats}
+            onUpdateStat={player.updateStat}
+            onSetAll={player.setAllStats}
+          />
+          <CombatantEquipmentPanel
+            title="Foe"
+            stats={foe.stats}
+            onUpdateStat={foe.updateStat}
+            onSetAll={foe.setAllStats}
+          />
+        </div>
+      )}
     </div>
   )
 }
