@@ -41,6 +41,7 @@ function App() {
           mp: getCombatStat('mp', player.stats),
           intelligence: player.stats.intelligence,
           abilities: player.abilities,
+          abilityOrder: player.abilityOrder,
         },
         {
           label: 'Foe',
@@ -57,6 +58,7 @@ function App() {
           mp: getCombatStat('mp', foe.stats),
           intelligence: foe.stats.intelligence,
           abilities: foe.abilities,
+          abilityOrder: foe.abilityOrder,
         },
       ]),
     [
@@ -70,6 +72,7 @@ function App() {
       player.stats.healthReg,
       player.stats.lifesteal,
       player.abilities,
+      player.abilityOrder,
       foe.stats.attackSpeed,
       foe.stats.strength,
       foe.stats.dexterity,
@@ -80,6 +83,7 @@ function App() {
       foe.stats.healthReg,
       foe.stats.lifesteal,
       foe.abilities,
+      foe.abilityOrder,
       rerunCount,
     ],
   )
@@ -155,6 +159,8 @@ function App() {
           onSetAll={player.setAllStats}
           abilities={player.abilities}
           onToggleAbility={player.toggleAbility}
+          abilityOrder={player.abilityOrder}
+          onReorderAbilities={player.reorderAbilities}
         />
 
         <CombatantPanel
@@ -165,6 +171,8 @@ function App() {
           onSetAll={foe.setAllStats}
           abilities={foe.abilities}
           onToggleAbility={foe.toggleAbility}
+          abilityOrder={foe.abilityOrder}
+          onReorderAbilities={foe.reorderAbilities}
         />
 
         <div className="w-full max-w-md shrink-0 lg:w-88">

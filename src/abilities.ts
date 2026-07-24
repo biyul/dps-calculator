@@ -11,4 +11,5 @@ export interface Ability {
 
 export const ABILITIES: Ability[] = [
   { key: 'fireball', label: 'Fireball', mpCost: 100, baseDamage: 250, intScaling: 1 },
+  { key: 'iceSpike', label: 'Ice Spike', mpCost: 100, baseDamage: 250, intScaling: 1 },
 ]

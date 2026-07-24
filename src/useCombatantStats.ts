@@ -7,10 +7,12 @@ export type AbilityValues = Record<string, boolean>
 
 const initialStats: StatValues = Object.fromEntries(STATS.map((s) => [s.key, s.min]))
 const initialAbilities: AbilityValues = Object.fromEntries(ABILITIES.map((a) => [a.key, false]))
+const initialAbilityOrder: string[] = ABILITIES.map((a) => a.key)
 
 export function useCombatantStats() {
   const [stats, setStats] = useState<StatValues>(initialStats)
   const [abilities, setAbilities] = useState<AbilityValues>(initialAbilities)
+  const [abilityOrder, setAbilityOrder] = useState<string[]>(initialAbilityOrder)
 
   const powerLevel = useMemo(() => {
     const total = CORE_STATS.reduce((sum, stat) => {
@@ -32,5 +34,18 @@ export function useCombatantStats() {
     setAbilities((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
-  return { stats, powerLevel, updateStat, setAllStats, abilities, toggleAbility }
+  function reorderAbilities(newOrder: string[]) {
+    setAbilityOrder(newOrder)
+  }
+
+  return {
+    stats,
+    powerLevel,
+    updateStat,
+    setAllStats,
+    abilities,
+    toggleAbility,
+    abilityOrder,
+    reorderAbilities,
+  }
 }

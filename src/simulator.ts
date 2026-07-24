@@ -1,4 +1,4 @@
-import { ABILITIES } from './abilities.ts'
+import { ABILITIES, type Ability } from './abilities.ts'
 import type { AbilityValues } from './useCombatantStats.ts'
 
 export interface LifestealHeal {
@@ -55,6 +55,7 @@ export interface CombatantInput {
   mp: number
   intelligence: number
   abilities: AbilityValues
+  abilityOrder: string[]
 }
 
 interface RawAttack {
@@ -95,10 +96,23 @@ function buildCombatantAttackSlots(attacker: CombatantInput, target: CombatantIn
   return attacks
 }
 
-function pickAbility(attacker: CombatantInput, mpAvailable: number) {
-  return ABILITIES.find(
-    (ability) => attacker.abilities[ability.key] && mpAvailable >= (ability.mpCost ?? 0),
-  )
+function pickAbility(
+  attacker: CombatantInput,
+  mpAvailable: number,
+  rotationIndex: number,
+): { ability: Ability; nextRotationIndex: number } | undefined {
+  const enabledOrder = attacker.abilityOrder.filter((key) => attacker.abilities[key])
+  if (enabledOrder.length === 0) return undefined
+
+  for (let i = 0; i < enabledOrder.length; i++) {
+    const index = (rotationIndex + i) % enabledOrder.length
+    const ability = ABILITIES.find((a) => a.key === enabledOrder[index])
+    if (ability && mpAvailable >= (ability.mpCost ?? 0)) {
+      return { ability, nextRotationIndex: (index + 1) % enabledOrder.length }
+    }
+  }
+
+  return undefined
 }
 
 function buildCombatantRegenTicks(combatant: CombatantInput): RawRegen[] {
@@ -138,6 +152,7 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
   const maxHp: Record<string, number> = { [a.label]: a.hp, [b.label]: b.hp }
   const currentHp: Record<string, number> = { ...maxHp }
   const currentMp: Record<string, number> = { [a.label]: a.mp, [b.label]: b.mp }
+  const abilityRotationIndex: Record<string, number> = { [a.label]: 0, [b.label]: 0 }
   const lifestealByLabel: Record<string, number> = {
     [a.label]: a.lifestealPercent,
     [b.label]: b.lifestealPercent,
@@ -169,9 +184,11 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
     const attacker = combatantByLabel[event.attackerLabel]
     const target = combatantByLabel[event.targetLabel]
 
-    const ability = pickAbility(attacker, currentMp[attacker.label])
-    if (ability) {
-      currentMp[attacker.label] -= ability.mpCost ?? 0
+    const picked = pickAbility(attacker, currentMp[attacker.label], abilityRotationIndex[attacker.label])
+    const ability = picked?.ability
+    if (picked) {
+      currentMp[attacker.label] -= picked.ability.mpCost ?? 0
+      abilityRotationIndex[attacker.label] = picked.nextRotationIndex
     }
 
     const baseDamage = ability
