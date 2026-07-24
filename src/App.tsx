@@ -1,22 +1,25 @@
 import { useEffect, useRef, useState } from 'react'
-import { RotateCw } from 'lucide-react'
+import { ArrowLeft, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
-import { getEquipmentTotal } from './equipment.ts'
+import { getEquipmentTotal, type EquipmentValues } from './equipment.ts'
+import { FOE_PRESETS, type FoePreset } from './foes.ts'
 import {
   buildTimeline,
   REGEN_INTERVAL_SEC,
   type AttackEvent,
+  type CombatantInput,
   type RegenEvent,
   type TimelineEvent,
 } from './simulator.ts'
 import { hpBar } from './hpBar.ts'
 import { mpBar } from './mpBar.ts'
-import { useCombatantStats } from './useCombatantStats.ts'
+import { useCombatantStats, type AbilityValues, type StatValues } from './useCombatantStats.ts'
 import CombatantStatsPanel from './components/CombatantStatsPanel.tsx'
 import CombatantCorePanel from './components/CombatantCorePanel.tsx'
 import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
 import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
+import FoeCard from './components/FoeCard.tsx'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -24,6 +27,32 @@ import { Switch } from '@/components/ui/switch'
 function eventOrder(event: AttackEvent | RegenEvent): number {
   if (event.kind === 'attack') return event.attackerLabel === 'Player' ? 0 : 1
   return 2
+}
+
+function buildCombatantInput(
+  label: string,
+  stats: StatValues,
+  equipment: EquipmentValues,
+  abilities: AbilityValues,
+  abilityOrder: string[],
+): CombatantInput {
+  return {
+    label,
+    baseSpeed: getBaseStat('speed'),
+    speedPercent: stats.speed + getEquipmentTotal(equipment, 'speed'),
+    attackDamage: getCombatStat('attack', stats),
+    hp: getCombatStat('hp', stats, equipment),
+    critChance: getCombatStat('critChance', stats),
+    critDamageMultiplier: getCombatStat('critDamage', stats),
+    blockChance: getCombatStat('block', stats),
+    healthRegPercent: getCombatStat('healthReg', stats),
+    lifestealPercent: getCombatStat('lifesteal', stats),
+    mpRegen: getCombatStat('mpRegen', stats),
+    mp: getCombatStat('mp', stats, equipment),
+    intelligence: stats.intelligence,
+    abilities,
+    abilityOrder,
+  }
 }
 
 type Screen = 'fight' | 'stats' | 'core' | 'abilities' | 'equipment'
@@ -37,52 +66,37 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
 ]
 
 function App() {
-  const player = useCombatantStats()
+  const player = useCombatantStats({ coreStatsBase: 10 })
   const foe = useCombatantStats()
   const [screen, setScreen] = useState<Screen>('fight')
+  const [selectedFoeKey, setSelectedFoeKey] = useState<string | null>(null)
   const [animateLog, setAnimateLog] = useState(false)
   const [visibleGroupCount, setVisibleGroupCount] = useState(0)
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
 
-  function runSimulation() {
+  function runSimulation(foeStats: StatValues = foe.stats) {
     setTimeline(
       buildTimeline([
-        {
-          label: 'Player',
-          baseSpeed: getBaseStat('speed'),
-          speedPercent: player.stats.speed + getEquipmentTotal(player.equipment, 'speed'),
-          attackDamage: getCombatStat('attack', player.stats),
-          hp: getCombatStat('hp', player.stats, player.equipment),
-          critChance: getCombatStat('critChance', player.stats),
-          critDamageMultiplier: getCombatStat('critDamage', player.stats),
-          blockChance: getCombatStat('block', player.stats),
-          healthRegPercent: getCombatStat('healthReg', player.stats),
-          lifestealPercent: getCombatStat('lifesteal', player.stats),
-          mpRegen: getCombatStat('mpRegen', player.stats),
-          mp: getCombatStat('mp', player.stats, player.equipment),
-          intelligence: player.stats.intelligence,
-          abilities: player.abilities,
-          abilityOrder: player.abilityOrder,
-        },
-        {
-          label: 'Foe',
-          baseSpeed: getBaseStat('speed'),
-          speedPercent: foe.stats.speed + getEquipmentTotal(foe.equipment, 'speed'),
-          attackDamage: getCombatStat('attack', foe.stats),
-          hp: getCombatStat('hp', foe.stats, foe.equipment),
-          critChance: getCombatStat('critChance', foe.stats),
-          critDamageMultiplier: getCombatStat('critDamage', foe.stats),
-          blockChance: getCombatStat('block', foe.stats),
-          healthRegPercent: getCombatStat('healthReg', foe.stats),
-          lifestealPercent: getCombatStat('lifesteal', foe.stats),
-          mpRegen: getCombatStat('mpRegen', foe.stats),
-          mp: getCombatStat('mp', foe.stats, foe.equipment),
-          intelligence: foe.stats.intelligence,
-          abilities: foe.abilities,
-          abilityOrder: foe.abilityOrder,
-        },
+        buildCombatantInput('Player', player.stats, player.equipment, player.abilities, player.abilityOrder),
+        buildCombatantInput('Foe', foeStats, foe.equipment, foe.abilities, foe.abilityOrder),
       ]),
     )
+  }
+
+  function handleFight(preset: FoePreset) {
+    const newFoeStats: StatValues = {
+      ...foe.stats,
+      strength: preset.strength,
+      dexterity: preset.dexterity,
+      intelligence: preset.intelligence,
+    }
+    foe.setStatsBulk({
+      strength: preset.strength,
+      dexterity: preset.dexterity,
+      intelligence: preset.intelligence,
+    })
+    setSelectedFoeKey(preset.key)
+    runSimulation(newFoeStats)
   }
 
   const logEvents = timeline.filter(
@@ -160,9 +174,26 @@ function App() {
         ))}
       </nav>
 
-      {screen === 'fight' && (
+      {screen === 'fight' && !selectedFoeKey && (
+        <div className="mx-auto flex max-w-375 flex-wrap items-stretch justify-center gap-6">
+          {FOE_PRESETS.map((preset) => (
+            <FoeCard key={preset.key} preset={preset} onFight={() => handleFight(preset)} />
+          ))}
+        </div>
+      )}
+
+      {screen === 'fight' && selectedFoeKey && (
         <div className="mx-auto w-full max-w-md">
           <div className="mb-2 flex items-center justify-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-xs"
+              aria-label="Back to foe list"
+              onClick={() => setSelectedFoeKey(null)}
+            >
+              <ArrowLeft />
+            </Button>
             <div className="text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
               Simulation
             </div>
@@ -171,7 +202,7 @@ function App() {
               variant="outline"
               size="icon-xs"
               aria-label="Rerun simulation"
-              onClick={runSimulation}
+              onClick={() => runSimulation()}
             >
               <RotateCw />
             </Button>

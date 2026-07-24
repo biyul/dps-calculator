@@ -6,13 +6,20 @@ import { EQUIPMENT, type EquipmentValues } from './equipment.ts'
 export type StatValues = Record<string, number>
 export type AbilityValues = Record<string, boolean>
 
-const initialStats: StatValues = Object.fromEntries(STATS.map((s) => [s.key, s.min]))
 const initialAbilities: AbilityValues = Object.fromEntries(ABILITIES.map((a) => [a.key, false]))
 const initialAbilityOrder: string[] = ABILITIES.map((a) => a.key)
 const initialEquipment: EquipmentValues = Object.fromEntries(EQUIPMENT.map((e) => [e.key, false]))
 
-export function useCombatantStats() {
-  const [stats, setStats] = useState<StatValues>(initialStats)
+export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
+  const { coreStatsBase } = options
+  const [stats, setStats] = useState<StatValues>(() =>
+    Object.fromEntries(
+      STATS.map((s) => [
+        s.key,
+        coreStatsBase !== undefined && CORE_STATS.some((c) => c.key === s.key) ? coreStatsBase : s.min,
+      ]),
+    ),
+  )
   const [abilities, setAbilities] = useState<AbilityValues>(initialAbilities)
   const [abilityOrder, setAbilityOrder] = useState<string[]>(initialAbilityOrder)
   const [equipment, setEquipment] = useState<EquipmentValues>(initialEquipment)
@@ -27,6 +34,10 @@ export function useCombatantStats() {
 
   function updateStat(key: string, value: number) {
     setStats((prev) => ({ ...prev, [key]: value }))
+  }
+
+  function setStatsBulk(overrides: Record<string, number>) {
+    setStats((prev) => ({ ...prev, ...overrides }))
   }
 
   function setAllStats(mode: 'min' | 'max', group: Stat[] = STATS) {
@@ -52,6 +63,7 @@ export function useCombatantStats() {
     stats,
     powerLevel,
     updateStat,
+    setStatsBulk,
     setAllStats,
     abilities,
     toggleAbility,
