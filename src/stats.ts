@@ -20,7 +20,7 @@ export const ATTRIBUTES: Stat[] = [
   { key: 'attackSpeed', label: 'Att Speed', min: 0, max: 40, unit: '%' },
   { key: 'critChance', label: 'Crit Chance', min: 0, max: 100, unit: '%' },
   { key: 'critDamage', label: 'Crit Damage', min: 0, max: 80, unit: '%', base: 20 },
-  { key: 'healthReg', label: 'Health Reg', min: 0, max: 4, unit: '%' },
+  { key: 'healthReg', label: 'HP Regen', min: 0, max: 4, unit: '%' },
   { key: 'lifesteal', label: 'Lifesteal', min: 0, max: 20, unit: '%' },
 ]
 

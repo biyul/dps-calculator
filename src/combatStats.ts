@@ -12,13 +12,13 @@ export interface CombatStat {
 export const COMBAT_STATS: CombatStat[] = [
   { key: 'attack', label: 'Attack' },
   { key: 'hp', label: 'HP' },
+  { key: 'mp', label: 'MP' },
   { key: 'block', label: 'Block', unit: '%' },
   { key: 'critChance', label: 'Crit Chance', unit: '%' },
   { key: 'critDamage', label: 'Crit Damage', unit: '%' },
-  { key: 'healthReg', label: 'Health Regen', unit: '%' },
   { key: 'lifesteal', label: 'Lifesteal', unit: '%' },
+  { key: 'healthReg', label: 'HP Regen', unit: '%' },
   { key: 'mpRegen', label: 'MP Regen' },
-  { key: 'mp', label: 'MP' },
 ]
 
 export function getCombatStat(key: string, stats: StatValues): number {
