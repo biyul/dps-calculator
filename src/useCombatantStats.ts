@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { STATS, CORE_STATS, type Stat } from './stats.ts'
 import { ABILITIES } from './abilities.ts'
+import { EQUIPMENT, type EquipmentValues } from './equipment.ts'
 
 export type StatValues = Record<string, number>
 export type AbilityValues = Record<string, boolean>
@@ -8,11 +9,13 @@ export type AbilityValues = Record<string, boolean>
 const initialStats: StatValues = Object.fromEntries(STATS.map((s) => [s.key, s.min]))
 const initialAbilities: AbilityValues = Object.fromEntries(ABILITIES.map((a) => [a.key, false]))
 const initialAbilityOrder: string[] = ABILITIES.map((a) => a.key)
+const initialEquipment: EquipmentValues = Object.fromEntries(EQUIPMENT.map((e) => [e.key, false]))
 
 export function useCombatantStats() {
   const [stats, setStats] = useState<StatValues>(initialStats)
   const [abilities, setAbilities] = useState<AbilityValues>(initialAbilities)
   const [abilityOrder, setAbilityOrder] = useState<string[]>(initialAbilityOrder)
+  const [equipment, setEquipment] = useState<EquipmentValues>(initialEquipment)
 
   const powerLevel = useMemo(() => {
     const total = CORE_STATS.reduce((sum, stat) => {
@@ -41,6 +44,10 @@ export function useCombatantStats() {
     setAbilityOrder(newOrder)
   }
 
+  function toggleEquipment(key: string) {
+    setEquipment((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
   return {
     stats,
     powerLevel,
@@ -50,5 +57,7 @@ export function useCombatantStats() {
     toggleAbility,
     abilityOrder,
     reorderAbilities,
+    equipment,
+    toggleEquipment,
   }
 }

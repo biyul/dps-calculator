@@ -1,13 +1,20 @@
 import { COMBAT_STATS, getCombatStat } from '../combatStats.ts'
+import type { EquipmentValues } from '../equipment.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 
 interface CombatantStatsPanelProps {
   title: string
   stats: StatValues
   powerLevel: number
+  equipment?: EquipmentValues
 }
 
-export default function CombatantStatsPanel({ title, stats, powerLevel }: CombatantStatsPanelProps) {
+export default function CombatantStatsPanel({
+  title,
+  stats,
+  powerLevel,
+  equipment,
+}: CombatantStatsPanelProps) {
   return (
     <div className="flex w-full max-w-lg flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
@@ -29,7 +36,7 @@ export default function CombatantStatsPanel({ title, stats, powerLevel }: Combat
               <tr key={stat.key} className="border-b last:border-b-0">
                 <td className="py-1 font-semibold">{stat.label}</td>
                 <td className="py-1 text-right tabular-nums">
-                  {getCombatStat(stat.key, stats).toFixed(stat.decimals ?? 0)}
+                  {getCombatStat(stat.key, stats, equipment).toFixed(stat.decimals ?? 0)}
                   {stat.unit ?? ''}
                 </td>
               </tr>

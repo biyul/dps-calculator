@@ -51,14 +51,14 @@ function App() {
           baseSpeed: getBaseStat('speed'),
           speedPercent: player.stats.speed,
           attackDamage: getCombatStat('attack', player.stats),
-          hp: getCombatStat('hp', player.stats),
+          hp: getCombatStat('hp', player.stats, player.equipment),
           critChance: getCombatStat('critChance', player.stats),
           critDamageMultiplier: getCombatStat('critDamage', player.stats),
           blockChance: getCombatStat('block', player.stats),
           healthRegPercent: getCombatStat('healthReg', player.stats),
           lifestealPercent: getCombatStat('lifesteal', player.stats),
           mpRegen: getCombatStat('mpRegen', player.stats),
-          mp: getCombatStat('mp', player.stats),
+          mp: getCombatStat('mp', player.stats, player.equipment),
           intelligence: player.stats.intelligence,
           abilities: player.abilities,
           abilityOrder: player.abilityOrder,
@@ -68,14 +68,14 @@ function App() {
           baseSpeed: getBaseStat('speed'),
           speedPercent: foe.stats.speed,
           attackDamage: getCombatStat('attack', foe.stats),
-          hp: getCombatStat('hp', foe.stats),
+          hp: getCombatStat('hp', foe.stats, foe.equipment),
           critChance: getCombatStat('critChance', foe.stats),
           critDamageMultiplier: getCombatStat('critDamage', foe.stats),
           blockChance: getCombatStat('block', foe.stats),
           healthRegPercent: getCombatStat('healthReg', foe.stats),
           lifestealPercent: getCombatStat('lifesteal', foe.stats),
           mpRegen: getCombatStat('mpRegen', foe.stats),
-          mp: getCombatStat('mp', foe.stats),
+          mp: getCombatStat('mp', foe.stats, foe.equipment),
           intelligence: foe.stats.intelligence,
           abilities: foe.abilities,
           abilityOrder: foe.abilityOrder,
@@ -331,8 +331,18 @@ function App() {
 
       {screen === 'stats' && (
         <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
-          <CombatantStatsPanel title="Player" stats={player.stats} powerLevel={player.powerLevel} />
-          <CombatantStatsPanel title="Foe" stats={foe.stats} powerLevel={foe.powerLevel} />
+          <CombatantStatsPanel
+            title="Player"
+            stats={player.stats}
+            powerLevel={player.powerLevel}
+            equipment={player.equipment}
+          />
+          <CombatantStatsPanel
+            title="Foe"
+            stats={foe.stats}
+            powerLevel={foe.powerLevel}
+            equipment={foe.equipment}
+          />
         </div>
       )}
 
@@ -379,6 +389,8 @@ function App() {
             stats={player.stats}
             onUpdateStat={player.updateStat}
             onSetAll={player.setAllStats}
+            equipment={player.equipment}
+            onToggleEquipment={player.toggleEquipment}
           />
           <CombatantEquipmentPanel
             title="Foe"

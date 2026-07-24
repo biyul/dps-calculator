@@ -1,6 +1,7 @@
-// Combat Stats: read-only values derived from base stats, core stats, and attributes.
+// Combat Stats: read-only values derived from base stats, core stats, attributes, and equipment.
 import { getBaseStat } from './baseStats.ts'
 import { getStatBase } from './stats.ts'
+import { getEquipmentTotal, type EquipmentValues } from './equipment.ts'
 import type { StatValues } from './useCombatantStats.ts'
 
 export interface CombatStat {
@@ -14,6 +15,8 @@ export const COMBAT_STATS: CombatStat[] = [
   { key: 'attack', label: 'Attack' },
   { key: 'hp', label: 'HP' },
   { key: 'mp', label: 'MP' },
+  { key: 'armour', label: 'Armour' },
+  { key: 'resist', label: 'Resist' },
   { key: 'block', label: 'Block', unit: '%' },
   { key: 'critChance', label: 'Crit Chance', unit: '%' },
   { key: 'critDamage', label: 'Crit Damage', unit: '%' },
@@ -23,12 +26,22 @@ export const COMBAT_STATS: CombatStat[] = [
   { key: 'speed', label: 'Speed', unit: '%' },
 ]
 
-export function getCombatStat(key: string, stats: StatValues): number {
+export function getCombatStat(
+  key: string,
+  stats: StatValues,
+  equipment: EquipmentValues = {},
+): number {
   switch (key) {
     case 'attack':
       return getBaseStat('attack') + stats.strength
     case 'hp':
-      return getBaseStat('hp') + stats.strength * 10
+      return getBaseStat('hp') + stats.strength * 10 + getEquipmentTotal(equipment, 'hp')
+    case 'mp':
+      return getBaseStat('mp') + getEquipmentTotal(equipment, 'mp')
+    case 'armour':
+      return getEquipmentTotal(equipment, 'armour')
+    case 'resist':
+      return getEquipmentTotal(equipment, 'resist')
     case 'block':
       return stats.block
     case 'critChance':
@@ -41,8 +54,6 @@ export function getCombatStat(key: string, stats: StatValues): number {
       return stats.lifesteal
     case 'mpRegen':
       return getBaseStat('mpRegen') + stats.intelligence
-    case 'mp':
-      return getBaseStat('mp')
     case 'speed':
       return 100 + stats.speed
     default:
