@@ -369,12 +369,6 @@ function App() {
             powerLevel={player.powerLevel}
             equipment={player.equipment}
           />
-          <CombatantStatsPanel
-            title="Foe"
-            stats={foe.stats}
-            powerLevel={foe.powerLevel}
-            equipment={foe.equipment}
-          />
         </div>
       )}
 
@@ -385,12 +379,6 @@ function App() {
             stats={player.stats}
             onUpdateStat={player.updateStat}
             onSetAll={player.setAllStats}
-          />
-          <CombatantCorePanel
-            title="Foe"
-            stats={foe.stats}
-            onUpdateStat={foe.updateStat}
-            onSetAll={foe.setAllStats}
           />
         </div>
       )}
@@ -404,13 +392,6 @@ function App() {
             abilityOrder={player.abilityOrder}
             onReorderAbilities={player.reorderAbilities}
           />
-          <CombatantAbilitiesPanel
-            title="Foe"
-            abilities={foe.abilities}
-            onToggleAbility={foe.toggleAbility}
-            abilityOrder={foe.abilityOrder}
-            onReorderAbilities={foe.reorderAbilities}
-          />
         </div>
       )}
 
@@ -423,12 +404,6 @@ function App() {
             onSetAll={player.setAllStats}
             equipment={player.equipment}
             onToggleEquipment={player.toggleEquipment}
-          />
-          <CombatantEquipmentPanel
-            title="Foe"
-            stats={foe.stats}
-            onUpdateStat={foe.updateStat}
-            onSetAll={foe.setAllStats}
           />
         </div>
       )}
