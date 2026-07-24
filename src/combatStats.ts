@@ -55,7 +55,7 @@ export function getCombatStat(
     case 'mpRegen':
       return getBaseStat('mpRegen') + stats.intelligence
     case 'speed':
-      return 100 + stats.speed
+      return 100 + stats.speed + getEquipmentTotal(equipment, 'speed')
     default:
       throw new Error(`Unknown combat stat: ${key}`)
   }

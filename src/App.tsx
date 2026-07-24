@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
+import { getEquipmentTotal } from './equipment.ts'
 import {
   buildTimeline,
   REGEN_INTERVAL_SEC,
@@ -49,7 +50,7 @@ function App() {
         {
           label: 'Player',
           baseSpeed: getBaseStat('speed'),
-          speedPercent: player.stats.speed,
+          speedPercent: player.stats.speed + getEquipmentTotal(player.equipment, 'speed'),
           attackDamage: getCombatStat('attack', player.stats),
           hp: getCombatStat('hp', player.stats, player.equipment),
           critChance: getCombatStat('critChance', player.stats),
@@ -66,7 +67,7 @@ function App() {
         {
           label: 'Foe',
           baseSpeed: getBaseStat('speed'),
-          speedPercent: foe.stats.speed,
+          speedPercent: foe.stats.speed + getEquipmentTotal(foe.equipment, 'speed'),
           attackDamage: getCombatStat('attack', foe.stats),
           hp: getCombatStat('hp', foe.stats, foe.equipment),
           critChance: getCombatStat('critChance', foe.stats),
