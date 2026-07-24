@@ -1,12 +1,16 @@
 import { useMemo, useState } from 'react'
 import { STATS, CORE_STATS } from './stats.ts'
+import { ABILITIES } from './abilities.ts'
 
 export type StatValues = Record<string, number>
+export type AbilityValues = Record<string, boolean>
 
 const initialStats: StatValues = Object.fromEntries(STATS.map((s) => [s.key, s.min]))
+const initialAbilities: AbilityValues = Object.fromEntries(ABILITIES.map((a) => [a.key, false]))
 
 export function useCombatantStats() {
   const [stats, setStats] = useState<StatValues>(initialStats)
+  const [abilities, setAbilities] = useState<AbilityValues>(initialAbilities)
 
   const powerLevel = useMemo(() => {
     const total = CORE_STATS.reduce((sum, stat) => {
@@ -24,5 +28,9 @@ export function useCombatantStats() {
     setStats(Object.fromEntries(STATS.map((s) => [s.key, mode === 'max' ? s.max : 0])))
   }
 
-  return { stats, powerLevel, updateStat, setAllStats }
+  function toggleAbility(key: string) {
+    setAbilities((prev) => ({ ...prev, [key]: !prev[key] }))
+  }
+
+  return { stats, powerLevel, updateStat, setAllStats, abilities, toggleAbility }
 }

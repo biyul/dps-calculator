@@ -27,6 +27,8 @@ function App() {
           blockChance: getCombatStat('block', player.stats),
           healthRegPercent: getCombatStat('healthReg', player.stats),
           lifestealPercent: getCombatStat('lifesteal', player.stats),
+          mpRegen: getCombatStat('mpRegen', player.stats),
+          mp: getCombatStat('mp', player.stats),
         },
         {
           label: 'Foe',
@@ -39,12 +41,15 @@ function App() {
           blockChance: getCombatStat('block', foe.stats),
           healthRegPercent: getCombatStat('healthReg', foe.stats),
           lifestealPercent: getCombatStat('lifesteal', foe.stats),
+          mpRegen: getCombatStat('mpRegen', foe.stats),
+          mp: getCombatStat('mp', foe.stats),
         },
       ]),
     [
       player.stats.attackSpeed,
       player.stats.strength,
       player.stats.dexterity,
+      player.stats.intelligence,
       player.stats.critChance,
       player.stats.critDamage,
       player.stats.block,
@@ -53,6 +58,7 @@ function App() {
       foe.stats.attackSpeed,
       foe.stats.strength,
       foe.stats.dexterity,
+      foe.stats.intelligence,
       foe.stats.critChance,
       foe.stats.critDamage,
       foe.stats.block,
@@ -80,6 +86,8 @@ function App() {
           powerLevel={player.powerLevel}
           onUpdateStat={player.updateStat}
           onSetAll={player.setAllStats}
+          abilities={player.abilities}
+          onToggleAbility={player.toggleAbility}
         />
 
         <CombatantPanel
@@ -88,6 +96,8 @@ function App() {
           powerLevel={foe.powerLevel}
           onUpdateStat={foe.updateStat}
           onSetAll={foe.setAllStats}
+          abilities={foe.abilities}
+          onToggleAbility={foe.toggleAbility}
         />
 
         <div className="w-full max-w-md shrink-0 lg:w-88">
@@ -108,7 +118,10 @@ function App() {
           <div className="flex max-h-[80vh] flex-col gap-3 overflow-y-auto font-mono text-sm whitespace-nowrap">
             {logEvents.map((event, index) => {
               if (event.kind === 'regen') {
-                const percent = Math.round((event.hpAfter / event.maxHp) * 100)
+                const percent =
+                  event.hpAfter !== undefined && event.maxHp !== undefined
+                    ? Math.round((event.hpAfter / event.maxHp) * 100)
+                    : undefined
                 return (
                   <div key={index} className="flex flex-col">
                     <span className="text-muted-foreground">t={event.time.toFixed(2)}s</span>
@@ -116,15 +129,26 @@ function App() {
                       {event.label}
                       {': Regen'}
                     </span>
-                    <span>
-                      {event.label}
-                      {' ← '}
-                      <span className="font-bold text-green-600">+{event.healAmount}</span>
-                      {' '}
-                      <span className="text-neutral-500">{hpBar(percent)}</span>
-                      {' '}
-                      <span className="text-neutral-500">{event.hpAfter}</span>
-                    </span>
+                    {event.healAmount !== undefined && (
+                      <span>
+                        {event.label}
+                        {' ← '}
+                        <span className="font-bold text-green-600">+{event.healAmount}</span>
+                        {' '}
+                        <span className="text-neutral-500">{hpBar(percent ?? 0)}</span>
+                        {' '}
+                        <span className="text-neutral-500">{event.hpAfter}</span>
+                      </span>
+                    )}
+                    {event.mpAmount !== undefined && (
+                      <span>
+                        {event.label}
+                        {' ← '}
+                        <span className="font-bold text-sky-400">+{event.mpAmount}</span>
+                        {' '}
+                        <span className="text-neutral-500">{event.mpAfter}</span>
+                      </span>
+                    )}
                   </div>
                 )
               }

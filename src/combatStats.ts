@@ -17,6 +17,8 @@ export const COMBAT_STATS: CombatStat[] = [
   { key: 'critDamage', label: 'Crit Damage', unit: '%' },
   { key: 'healthReg', label: 'Health Regen', unit: '%' },
   { key: 'lifesteal', label: 'Lifesteal', unit: '%' },
+  { key: 'mpRegen', label: 'MP Regen' },
+  { key: 'mp', label: 'MP' },
 ]
 
 export function getCombatStat(key: string, stats: StatValues): number {
@@ -35,6 +37,10 @@ export function getCombatStat(key: string, stats: StatValues): number {
       return stats.healthReg
     case 'lifesteal':
       return stats.lifesteal
+    case 'mpRegen':
+      return getBaseStat('mpRegen') + stats.intelligence
+    case 'mp':
+      return getBaseStat('mp')
     default:
       throw new Error(`Unknown combat stat: ${key}`)
   }

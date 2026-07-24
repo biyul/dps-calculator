@@ -21,9 +21,11 @@ export interface RegenEvent {
   kind: 'regen'
   time: number
   label: string
-  healAmount: number
-  hpAfter: number
-  maxHp: number
+  healAmount?: number
+  hpAfter?: number
+  maxHp?: number
+  mpAmount?: number
+  mpAfter?: number
 }
 
 export interface VictoryEvent {
@@ -45,6 +47,8 @@ export interface CombatantInput {
   blockChance: number
   healthRegPercent: number
   lifestealPercent: number
+  mpRegen: number
+  mp: number
 }
 
 interface RawAttack {
@@ -61,7 +65,8 @@ interface RawRegen {
   kind: 'regen'
   time: number
   label: string
-  healAmount: number
+  healAmount?: number
+  mpAmount?: number
 }
 
 type RawEvent = RawAttack | RawRegen
@@ -99,9 +104,13 @@ function buildCombatantAttacks(attacker: CombatantInput, target: CombatantInput)
 }
 
 function buildCombatantRegenTicks(combatant: CombatantInput): RawRegen[] {
-  if (combatant.healthRegPercent <= 0) return []
+  if (combatant.healthRegPercent <= 0 && combatant.mpRegen <= 0) return []
 
-  const healAmount = Math.round(combatant.hp * (combatant.healthRegPercent / 100))
+  const healAmount =
+    combatant.healthRegPercent > 0
+      ? Math.round(combatant.hp * (combatant.healthRegPercent / 100))
+      : undefined
+  const mpAmount = combatant.mpRegen > 0 ? Math.round(combatant.mpRegen) : undefined
   const ticks: RawRegen[] = []
 
   for (let t = REGEN_INTERVAL_SEC; t <= TIMELINE_DURATION_SEC + EPSILON; t += REGEN_INTERVAL_SEC) {
@@ -110,6 +119,7 @@ function buildCombatantRegenTicks(combatant: CombatantInput): RawRegen[] {
       time: Math.round(t * 100) / 100,
       label: combatant.label,
       healAmount,
+      mpAmount,
     })
   }
 
@@ -128,6 +138,7 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
 
   const maxHp: Record<string, number> = { [a.label]: a.hp, [b.label]: b.hp }
   const currentHp: Record<string, number> = { ...maxHp }
+  const currentMp: Record<string, number> = { [a.label]: a.mp, [b.label]: b.mp }
   const lifestealByLabel: Record<string, number> = {
     [a.label]: a.lifestealPercent,
     [b.label]: b.lifestealPercent,
@@ -137,14 +148,21 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
 
   for (const event of events) {
     if (event.kind === 'regen') {
-      currentHp[event.label] = Math.min(maxHp[event.label], currentHp[event.label] + event.healAmount)
+      if (event.healAmount !== undefined) {
+        currentHp[event.label] = Math.min(maxHp[event.label], currentHp[event.label] + event.healAmount)
+      }
+      if (event.mpAmount !== undefined) {
+        currentMp[event.label] = currentMp[event.label] + event.mpAmount
+      }
       timeline.push({
         kind: 'regen',
         time: event.time,
         label: event.label,
         healAmount: event.healAmount,
-        hpAfter: currentHp[event.label],
-        maxHp: maxHp[event.label],
+        hpAfter: event.healAmount !== undefined ? currentHp[event.label] : undefined,
+        maxHp: event.healAmount !== undefined ? maxHp[event.label] : undefined,
+        mpAmount: event.mpAmount,
+        mpAfter: event.mpAmount !== undefined ? currentMp[event.label] : undefined,
       })
       continue
     }

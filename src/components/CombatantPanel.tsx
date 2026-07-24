@@ -1,8 +1,10 @@
 import { Minus, Plus } from 'lucide-react'
 import { CORE_STATS, ATTRIBUTES } from '../stats.ts'
 import { COMBAT_STATS, getCombatStat } from '../combatStats.ts'
-import type { StatValues } from '../useCombatantStats.ts'
+import { ABILITIES } from '../abilities.ts'
+import type { AbilityValues, StatValues } from '../useCombatantStats.ts'
 import StatInput from './StatInput.tsx'
+import AbilityToggle from './AbilityToggle.tsx'
 import { Button } from '@/components/ui/button'
 
 interface CombatantPanelProps {
@@ -11,6 +13,8 @@ interface CombatantPanelProps {
   powerLevel: number
   onUpdateStat: (key: string, value: number) => void
   onSetAll: (mode: 'min' | 'max') => void
+  abilities: AbilityValues
+  onToggleAbility: (key: string) => void
 }
 
 export default function CombatantPanel({
@@ -19,6 +23,8 @@ export default function CombatantPanel({
   powerLevel,
   onUpdateStat,
   onSetAll,
+  abilities,
+  onToggleAbility,
 }: CombatantPanelProps) {
   return (
     <div className="flex w-full max-w-lg flex-col">
@@ -81,6 +87,20 @@ export default function CombatantPanel({
             stat={stat}
             value={stats[stat.key]}
             onChange={(value) => onUpdateStat(stat.key, value)}
+          />
+        ))}
+      </section>
+
+      <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        Abilities
+      </div>
+      <section className="mb-4 flex flex-col">
+        {ABILITIES.map((ability) => (
+          <AbilityToggle
+            key={ability.key}
+            ability={ability}
+            checked={abilities[ability.key]}
+            onChange={() => onToggleAbility(ability.key)}
           />
         ))}
       </section>
