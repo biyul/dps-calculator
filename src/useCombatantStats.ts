@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { STATS } from './stats.ts'
+import { STATS, CORE_STATS } from './stats.ts'
 
 export type StatValues = Record<string, number>
 
@@ -9,7 +9,7 @@ export function useCombatantStats() {
   const [stats, setStats] = useState<StatValues>(initialStats)
 
   const powerLevel = useMemo(() => {
-    const total = STATS.reduce((sum, stat) => {
+    const total = CORE_STATS.reduce((sum, stat) => {
       const value = stats[stat.key]
       return sum + ((value - stat.min) / (stat.max - stat.min)) * 100
     }, 0)

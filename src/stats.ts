@@ -9,7 +9,13 @@ export interface Stat {
   base?: number
 }
 
-export const STATS: Stat[] = [
+export const CORE_STATS: Stat[] = [
+  { key: 'strength', label: 'Strength', min: 0, max: 100, unit: '' },
+  { key: 'dexterity', label: 'Dexterity', min: 0, max: 100, unit: '' },
+  { key: 'intelligence', label: 'Intelligence', min: 0, max: 100, unit: '' },
+]
+
+export const ATTRIBUTES: Stat[] = [
   { key: 'block', label: 'Block', min: 0, max: 100, unit: '%' },
   { key: 'attackSpeed', label: 'Att Speed', min: 0, max: 40, unit: '%' },
   { key: 'critChance', label: 'Crit Chance', min: 0, max: 100, unit: '%' },
@@ -17,6 +23,8 @@ export const STATS: Stat[] = [
   { key: 'healthReg', label: 'Health Reg', min: 0, max: 4, unit: '%' },
   { key: 'lifesteal', label: 'Lifesteal', min: 0, max: 20, unit: '%' },
 ]
+
+export const STATS: Stat[] = [...CORE_STATS, ...ATTRIBUTES]
 
 export function getStatBase(key: string): number {
   return STATS.find((s) => s.key === key)?.base ?? 0
