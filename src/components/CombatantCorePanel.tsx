@@ -1,7 +1,7 @@
 import { Minus, Plus } from 'lucide-react'
 import { CORE_STATS, type Stat } from '../stats.ts'
 import type { StatValues } from '../useCombatantStats.ts'
-import StatInput from './StatInput.tsx'
+import CoreStatInput from './CoreStatInput.tsx'
 import { Button } from '@/components/ui/button'
 
 interface CombatantCorePanelProps {
@@ -44,7 +44,7 @@ export default function CombatantCorePanel({
 
       <section className="flex flex-col">
         {CORE_STATS.map((stat) => (
-          <StatInput
+          <CoreStatInput
             key={stat.key}
             stat={stat}
             value={stats[stat.key]}
