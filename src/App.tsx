@@ -15,6 +15,7 @@ import {
 import { hpBar } from './hpBar.ts'
 import { mpBar } from './mpBar.ts'
 import { useCombatantStats, type AbilityValues, type StatValues } from './useCombatantStats.ts'
+import { useMetaStats, META_STATS } from './useMetaStats.ts'
 import CombatantStatsPanel from './components/CombatantStatsPanel.tsx'
 import CombatantCorePanel from './components/CombatantCorePanel.tsx'
 import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
@@ -68,6 +69,7 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
 function App() {
   const player = useCombatantStats({ coreStatsBase: 10 })
   const foe = useCombatantStats()
+  const { metaStats, setMetaStats } = useMetaStats()
   const [screen, setScreen] = useState<Screen>('fight')
   const [selectedFoeKey, setSelectedFoeKey] = useState<string | null>(null)
   const [animateLog, setAnimateLog] = useState(false)
@@ -103,6 +105,19 @@ function App() {
     (e): e is AttackEvent | RegenEvent => e.kind === 'attack' || e.kind === 'regen',
   )
   const victoryEvent = timeline.find((e) => e.kind === 'victory')
+
+  useEffect(() => {
+    if (!victoryEvent || !selectedFoeKey) return
+    const preset = FOE_PRESETS.find((p) => p.key === selectedFoeKey)
+    if (!preset) return
+    const multiplier = victoryEvent.winnerLabel === 'Player' ? 1 : 0.1
+    setMetaStats((prev) => ({
+      ...prev,
+      xp: prev.xp + Math.round(preset.xpReward * multiplier),
+      gold: prev.gold + Math.round(preset.goldReward * multiplier),
+    }))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [timeline])
 
   const sortedLogEvents = [...logEvents].sort((a, b) => {
     const bucketA = Math.ceil(a.time / REGEN_INTERVAL_SEC)
@@ -157,9 +172,22 @@ function App() {
 
   return (
     <div className="px-4 pb-6">
-      <h1 className="py-5 text-center text-2xl font-medium tracking-tight">
-        DPS Calculator
-      </h1>
+      <div className="relative py-5">
+        <h1 className="text-center text-2xl font-medium tracking-tight">
+          DPS Calculator
+        </h1>
+
+        <div className="absolute top-1/2 right-0 flex -translate-y-1/2 gap-4">
+          {META_STATS.map((stat) => (
+            <div key={stat.key} className="text-center">
+              <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                {stat.label}
+              </div>
+              <div className="text-lg font-bold tabular-nums">{metaStats[stat.key]}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       <nav className="mb-8 flex justify-center gap-2">
         {NAV_ITEMS.map((item) => (
@@ -358,6 +386,15 @@ function App() {
               </span>
             </div>
           )}
+
+          <div className="mt-4 flex justify-center gap-2">
+            <Button type="button" onClick={() => runSimulation()}>
+              Fight Again
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setSelectedFoeKey(null)}>
+              Go Back to Listings
+            </Button>
+          </div>
         </div>
       )}
 
@@ -367,6 +404,7 @@ function App() {
             title="Player"
             stats={player.stats}
             powerLevel={player.powerLevel}
+            gold={player.gold}
             equipment={player.equipment}
           />
         </div>

@@ -46,6 +46,22 @@ export default function FoeCard({ preset, onFight }: FoeCardProps) {
         </tbody>
       </table>
 
+      <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+        Rewards
+      </div>
+      <table className="mb-4 w-full text-sm">
+        <tbody>
+          <tr className="border-b last:border-b-0">
+            <td className="py-1 font-semibold">XP</td>
+            <td className="py-1 text-right tabular-nums">{preset.xpReward}</td>
+          </tr>
+          <tr className="border-b last:border-b-0">
+            <td className="py-1 font-semibold">Gold</td>
+            <td className="py-1 text-right tabular-nums">{preset.goldReward}</td>
+          </tr>
+        </tbody>
+      </table>
+
       <Button type="button" onClick={onFight} className="mt-auto">
         FIGHT
       </Button>

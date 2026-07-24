@@ -6,6 +6,7 @@ interface CombatantStatsPanelProps {
   title: string
   stats: StatValues
   powerLevel: number
+  gold: number
   equipment?: EquipmentValues
 }
 
@@ -13,17 +14,26 @@ export default function CombatantStatsPanel({
   title,
   stats,
   powerLevel,
+  gold,
   equipment,
 }: CombatantStatsPanelProps) {
   return (
     <div className="flex w-full max-w-lg flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
 
-      <div className="pb-4 text-center">
-        <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-          Power Level
+      <div className="flex justify-center gap-8 pb-4">
+        <div className="text-center">
+          <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Power Level
+          </div>
+          <div className="text-5xl font-bold tabular-nums">{powerLevel}</div>
         </div>
-        <div className="text-5xl font-bold tabular-nums">{powerLevel}</div>
+        <div className="text-center">
+          <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Gold
+          </div>
+          <div className="text-5xl font-bold tabular-nums">{gold}</div>
+        </div>
       </div>
 
       <div className="border-y py-3">
