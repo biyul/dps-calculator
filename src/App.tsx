@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
-import { getStatBase } from './stats.ts'
+import { getCombatStat } from './combatStats.ts'
 import { buildTimeline, type AttackEvent, type RegenEvent } from './simulator.ts'
 import { hpBar } from './hpBar.ts'
 import { useCombatantStats } from './useCombatantStats.ts'
@@ -20,35 +20,37 @@ function App() {
           label: 'Player',
           baseAttackSpeed: getBaseStat('attackSpeed'),
           attackSpeedPercent: player.stats.attackSpeed,
-          attackDamage: getBaseStat('attack'),
-          hp: getBaseStat('hp'),
-          critChance: player.stats.critChance,
-          critDamageMultiplier: getStatBase('critDamage') + player.stats.critDamage,
-          blockChance: player.stats.block,
-          healthRegPercent: player.stats.healthReg,
-          lifestealPercent: player.stats.lifesteal,
+          attackDamage: getCombatStat('attack', player.stats),
+          hp: getCombatStat('hp', player.stats),
+          critChance: getCombatStat('critChance', player.stats),
+          critDamageMultiplier: getCombatStat('critDamage', player.stats),
+          blockChance: getCombatStat('block', player.stats),
+          healthRegPercent: getCombatStat('healthReg', player.stats),
+          lifestealPercent: getCombatStat('lifesteal', player.stats),
         },
         {
           label: 'Foe',
           baseAttackSpeed: getBaseStat('attackSpeed'),
           attackSpeedPercent: foe.stats.attackSpeed,
-          attackDamage: getBaseStat('attack'),
-          hp: getBaseStat('hp'),
-          critChance: foe.stats.critChance,
-          critDamageMultiplier: getStatBase('critDamage') + foe.stats.critDamage,
-          blockChance: foe.stats.block,
-          healthRegPercent: foe.stats.healthReg,
-          lifestealPercent: foe.stats.lifesteal,
+          attackDamage: getCombatStat('attack', foe.stats),
+          hp: getCombatStat('hp', foe.stats),
+          critChance: getCombatStat('critChance', foe.stats),
+          critDamageMultiplier: getCombatStat('critDamage', foe.stats),
+          blockChance: getCombatStat('block', foe.stats),
+          healthRegPercent: getCombatStat('healthReg', foe.stats),
+          lifestealPercent: getCombatStat('lifesteal', foe.stats),
         },
       ]),
     [
       player.stats.attackSpeed,
+      player.stats.dexterity,
       player.stats.critChance,
       player.stats.critDamage,
       player.stats.block,
       player.stats.healthReg,
       player.stats.lifesteal,
       foe.stats.attackSpeed,
+      foe.stats.dexterity,
       foe.stats.critChance,
       foe.stats.critDamage,
       foe.stats.block,

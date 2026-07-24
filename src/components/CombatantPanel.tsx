@@ -1,6 +1,6 @@
 import { Minus, Plus } from 'lucide-react'
-import { CORE_STATS, ATTRIBUTES, getStatBase } from '../stats.ts'
-import { getBaseStat } from '../baseStats.ts'
+import { CORE_STATS, ATTRIBUTES } from '../stats.ts'
+import { COMBAT_STATS, getCombatStat } from '../combatStats.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 import StatInput from './StatInput.tsx'
 import { Button } from '@/components/ui/button'
@@ -20,16 +20,6 @@ export default function CombatantPanel({
   onUpdateStat,
   onSetAll,
 }: CombatantPanelProps) {
-  const combatStats = [
-    { label: 'Attack', value: getBaseStat('attack') },
-    { label: 'HP', value: getBaseStat('hp') },
-    { label: 'Block', value: stats.block, unit: '%' },
-    { label: 'Crit Chance', value: stats.critChance, unit: '%' },
-    { label: 'Crit Damage', value: getStatBase('critDamage') + stats.critDamage, unit: '%' },
-    { label: 'Health Regen', value: stats.healthReg, unit: '%' },
-    { label: 'Lifesteal', value: stats.lifesteal, unit: '%' },
-  ]
-
   return (
     <div className="flex w-full max-w-lg flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
@@ -47,11 +37,11 @@ export default function CombatantPanel({
         </div>
         <table className="w-full text-sm">
           <tbody>
-            {combatStats.map((stat) => (
-              <tr key={stat.label} className="border-b last:border-b-0">
+            {COMBAT_STATS.map((stat) => (
+              <tr key={stat.key} className="border-b last:border-b-0">
                 <td className="py-1 font-semibold">{stat.label}</td>
                 <td className="py-1 text-right tabular-nums">
-                  {stat.value}
+                  {getCombatStat(stat.key, stats)}
                   {stat.unit ?? ''}
                 </td>
               </tr>
