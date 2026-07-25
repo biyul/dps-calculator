@@ -24,7 +24,7 @@ export default function EventColumns({ groups }: EventColumnsProps) {
       </div>
       <div
         ref={containerRef}
-        className="flex max-h-[80vh] flex-col divide-y overflow-y-auto font-mono text-sm whitespace-nowrap"
+        className="flex max-h-[50vh] flex-col divide-y overflow-y-auto font-mono text-sm whitespace-nowrap"
       >
         {groups.map((group, index) => {
           const order = eventOrder(group[0])

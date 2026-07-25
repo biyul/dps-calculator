@@ -20,7 +20,7 @@ export default function EventLog({ groups, className }: EventLogProps) {
     <div
       ref={containerRef}
       className={cn(
-        'flex max-h-[80vh] flex-col divide-y overflow-y-auto font-mono text-sm whitespace-nowrap',
+        'flex max-h-[50vh] flex-col divide-y overflow-y-auto font-mono text-sm whitespace-nowrap',
         className,
       )}
     >
