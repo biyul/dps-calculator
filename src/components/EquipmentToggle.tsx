@@ -31,6 +31,7 @@ export default function EquipmentToggle({ item, checked, onChange }: EquipmentTo
           className={`flex-1 font-semibold ${checked ? '' : 'text-muted-foreground/50'}`}
         >
           {item.label}
+          <span className="font-normal text-muted-foreground">({item.type})</span>
         </Label>
         <Switch id={item.key} checked={checked} onCheckedChange={onChange} />
       </div>

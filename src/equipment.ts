@@ -1,11 +1,13 @@
 // Equipment definitions for the DPS calculator. Each piece is a simple on/off toggle
 // (no rolls, no multiple copies) that contributes flat HP/MP/Armour/Resist/Speed.
 export type EquipmentSlot = 'body'
+export type EquipmentType = 'Light' | 'Heavy' | 'Mystic'
 
 export interface EquipmentPiece {
   key: string
   label: string
   slot: EquipmentSlot
+  type: EquipmentType
   hp: number
   mp: number
   armour: number
@@ -18,6 +20,7 @@ export const EQUIPMENT: EquipmentPiece[] = [
     key: 'leatherArmour',
     label: 'Leather Armour',
     slot: 'body',
+    type: 'Light',
     hp: 50,
     mp: 0,
     armour: 10,
