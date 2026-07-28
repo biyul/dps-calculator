@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react'
 import { STATS, CORE_STATS, type Stat } from './stats.ts'
 import { ABILITIES } from './abilities.ts'
-import { EQUIPMENT, type EquipmentValues } from './equipment.ts'
+import { EQUIPMENT, getEquipmentPiece, type InventoryItem } from './equipment.ts'
 
 export type StatValues = Record<string, number>
 export type AbilityValues = Record<string, boolean>
 
 const initialAbilities: AbilityValues = Object.fromEntries(ABILITIES.map((a) => [a.key, false]))
 const initialAbilityOrder: string[] = ABILITIES.map((a) => a.key)
-const initialEquipment: EquipmentValues = Object.fromEntries(EQUIPMENT.map((e) => [e.key, false]))
 
 export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
   const { coreStatsBase } = options
@@ -22,7 +21,7 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
   )
   const [abilities, setAbilities] = useState<AbilityValues>(initialAbilities)
   const [abilityOrder, setAbilityOrder] = useState<string[]>(initialAbilityOrder)
-  const [equipment, setEquipment] = useState<EquipmentValues>(initialEquipment)
+  const [inventory, setInventory] = useState<InventoryItem[]>([])
   const [gold, setGold] = useState(0)
 
   const powerLevel = useMemo(() => {
@@ -56,8 +55,35 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
     setAbilityOrder(newOrder)
   }
 
-  function toggleEquipment(key: string) {
-    setEquipment((prev) => ({ ...prev, [key]: !prev[key] }))
+  function addRandomEquipment() {
+    const picked = EQUIPMENT[Math.floor(Math.random() * EQUIPMENT.length)]
+    const item: InventoryItem = {
+      id: crypto.randomUUID(),
+      key: picked.key,
+      equipped: false,
+    }
+    setInventory((prev) => [...prev, item])
+  }
+
+  function deleteEquipment(id: string) {
+    setInventory((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  function toggleEquip(id: string) {
+    setInventory((prev) => {
+      const target = prev.find((item) => item.id === id)
+      if (!target) return prev
+      const targetPiece = getEquipmentPiece(target.key)
+      const nextEquipped = !target.equipped
+
+      return prev.map((item) => {
+        if (item.id === id) return { ...item, equipped: nextEquipped }
+        if (!nextEquipped || !targetPiece) return item
+        const piece = getEquipmentPiece(item.key)
+        if (piece && piece.slot === targetPiece.slot) return { ...item, equipped: false }
+        return item
+      })
+    })
   }
 
   return {
@@ -70,8 +96,10 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
     toggleAbility,
     abilityOrder,
     reorderAbilities,
-    equipment,
-    toggleEquipment,
+    inventory,
+    addRandomEquipment,
+    deleteEquipment,
+    toggleEquip,
     gold,
     setGold,
   }

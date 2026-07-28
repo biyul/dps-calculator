@@ -1,9 +1,9 @@
 import { Minus, Plus } from 'lucide-react'
 import { ATTRIBUTES, type Stat } from '../stats.ts'
-import { EQUIPMENT, type EquipmentValues } from '../equipment.ts'
+import { getEquipmentPiece, type InventoryItem } from '../equipment.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 import StatInput from './StatInput.tsx'
-import EquipmentToggle from './EquipmentToggle.tsx'
+import EquipmentItem from './EquipmentItem.tsx'
 import { Button } from '@/components/ui/button'
 
 interface CombatantEquipmentPanelProps {
@@ -11,8 +11,10 @@ interface CombatantEquipmentPanelProps {
   stats: StatValues
   onUpdateStat: (key: string, value: number) => void
   onSetAll: (mode: 'min' | 'max', group?: Stat[]) => void
-  equipment?: EquipmentValues
-  onToggleEquipment?: (key: string) => void
+  inventory?: InventoryItem[]
+  onAddEquipment?: () => void
+  onDeleteEquipment?: (id: string) => void
+  onToggleEquip?: (id: string) => void
 }
 
 export default function CombatantEquipmentPanel({
@@ -20,27 +22,70 @@ export default function CombatantEquipmentPanel({
   stats,
   onUpdateStat,
   onSetAll,
-  equipment,
-  onToggleEquipment,
+  inventory,
+  onAddEquipment,
+  onDeleteEquipment,
+  onToggleEquip,
 }: CombatantEquipmentPanelProps) {
   return (
     <div className="flex w-full max-w-lg flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
 
-      {equipment && onToggleEquipment && (
+      {inventory && onAddEquipment && onDeleteEquipment && onToggleEquip && (
         <>
           <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Equipment
+            Body
+          </div>
+
+          {inventory.some((item) => item.equipped) && (
+            <>
+              <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Equipped
+              </div>
+              <section className="mb-3 flex flex-col">
+                {inventory
+                  .filter((item) => item.equipped)
+                  .map((item) => {
+                    const piece = getEquipmentPiece(item.key)
+                    if (!piece) return null
+                    return (
+                      <EquipmentItem
+                        key={item.id}
+                        piece={piece}
+                        equipped
+                        onDelete={() => onDeleteEquipment(item.id)}
+                        onToggleEquip={() => onToggleEquip(item.id)}
+                      />
+                    )
+                  })}
+              </section>
+            </>
+          )}
+
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Inventory
+            </span>
+            <Button type="button" size="xs" onClick={onAddEquipment}>
+              Add
+            </Button>
           </div>
           <section className="mb-4 flex flex-col">
-            {EQUIPMENT.map((item) => (
-              <EquipmentToggle
-                key={item.key}
-                item={item}
-                checked={equipment[item.key]}
-                onChange={() => onToggleEquipment(item.key)}
-              />
-            ))}
+            {inventory
+              .filter((item) => !item.equipped)
+              .map((item) => {
+                const piece = getEquipmentPiece(item.key)
+                if (!piece) return null
+                return (
+                  <EquipmentItem
+                    key={item.id}
+                    piece={piece}
+                    equipped={false}
+                    onDelete={() => onDeleteEquipment(item.id)}
+                    onToggleEquip={() => onToggleEquip(item.id)}
+                  />
+                )
+              })}
           </section>
         </>
       )}

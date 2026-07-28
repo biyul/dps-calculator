@@ -1,5 +1,6 @@
-// Equipment definitions for the DPS calculator. Each piece is a simple on/off toggle
-// (no rolls, no multiple copies) that contributes flat HP/MP/Armour/Resist/Speed.
+// Equipment definitions for the DPS calculator. Definitions are static templates;
+// a combatant's actual gear is a list of owned instances (see InventoryItem) so
+// duplicates of the same definition are possible.
 export type EquipmentSlot = 'body'
 export type EquipmentType = 'Light' | 'Heavy' | 'Mystic'
 
@@ -27,13 +28,47 @@ export const EQUIPMENT: EquipmentPiece[] = [
     resist: 0,
     speed: -5,
   },
+  {
+    key: 'leatherPlate',
+    label: 'Leather Plate',
+    slot: 'body',
+    type: 'Heavy',
+    hp: 100,
+    mp: 0,
+    armour: 20,
+    resist: 0,
+    speed: -10,
+  },
+  {
+    key: 'cottonShirt',
+    label: 'Cotton Shirt',
+    slot: 'body',
+    type: 'Mystic',
+    hp: 50,
+    mp: 25,
+    armour: 5,
+    resist: 0,
+    speed: -7,
+  },
 ]
 
-export type EquipmentValues = Record<string, boolean>
+export interface InventoryItem {
+  id: string
+  key: string
+  equipped: boolean
+}
+
+export function getEquipmentPiece(key: string): EquipmentPiece | undefined {
+  return EQUIPMENT.find((item) => item.key === key)
+}
 
 export function getEquipmentTotal(
-  equipment: EquipmentValues,
+  inventory: InventoryItem[],
   field: 'hp' | 'mp' | 'armour' | 'resist' | 'speed',
 ): number {
-  return EQUIPMENT.filter((item) => equipment[item.key]).reduce((sum, item) => sum + item[field], 0)
+  return inventory
+    .filter((item) => item.equipped)
+    .map((item) => getEquipmentPiece(item.key))
+    .filter((piece): piece is EquipmentPiece => piece !== undefined)
+    .reduce((sum, piece) => sum + piece[field], 0)
 }

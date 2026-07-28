@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
-import { getEquipmentTotal, type EquipmentValues } from './equipment.ts'
+import { getEquipmentTotal, type InventoryItem } from './equipment.ts'
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
 import {
   buildTimeline,
@@ -31,23 +31,23 @@ import { ToggleGroup } from '@/components/ui/toggle-group'
 function buildCombatantInput(
   label: string,
   stats: StatValues,
-  equipment: EquipmentValues,
+  inventory: InventoryItem[],
   abilities: AbilityValues,
   abilityOrder: string[],
 ): CombatantInput {
   return {
     label,
     baseSpeed: getBaseStat('speed'),
-    speedPercent: stats.speed + getEquipmentTotal(equipment, 'speed'),
+    speedPercent: stats.speed + getEquipmentTotal(inventory, 'speed'),
     attackDamage: getCombatStat('attack', stats),
-    hp: getCombatStat('hp', stats, equipment),
+    hp: getCombatStat('hp', stats, inventory),
     critChance: getCombatStat('critChance', stats),
     critDamageMultiplier: getCombatStat('critDamage', stats),
     blockChance: getCombatStat('block', stats),
     healthRegPercent: getCombatStat('healthReg', stats),
     lifestealPercent: getCombatStat('lifesteal', stats),
     mpRegen: getCombatStat('mpRegen', stats),
-    mp: getCombatStat('mp', stats, equipment),
+    mp: getCombatStat('mp', stats, inventory),
     intelligence: stats.intelligence,
     abilities,
     abilityOrder,
@@ -79,8 +79,8 @@ function App() {
   function runSimulation(foeStats: StatValues = foe.stats) {
     setTimeline(
       buildTimeline([
-        buildCombatantInput('Player', player.stats, player.equipment, player.abilities, player.abilityOrder),
-        buildCombatantInput('Foe', foeStats, foe.equipment, foe.abilities, foe.abilityOrder),
+        buildCombatantInput('Player', player.stats, player.inventory, player.abilities, player.abilityOrder),
+        buildCombatantInput('Foe', foeStats, foe.inventory, foe.abilities, foe.abilityOrder),
       ]),
     )
   }
@@ -282,7 +282,7 @@ function App() {
             stats={player.stats}
             powerLevel={player.powerLevel}
             gold={player.gold}
-            equipment={player.equipment}
+            inventory={player.inventory}
           />
         </div>
       )}
@@ -317,8 +317,10 @@ function App() {
             stats={player.stats}
             onUpdateStat={player.updateStat}
             onSetAll={player.setAllStats}
-            equipment={player.equipment}
-            onToggleEquipment={player.toggleEquipment}
+            inventory={player.inventory}
+            onAddEquipment={player.addRandomEquipment}
+            onDeleteEquipment={player.deleteEquipment}
+            onToggleEquip={player.toggleEquip}
           />
         </div>
       )}
