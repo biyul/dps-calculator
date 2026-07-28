@@ -65,8 +65,12 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
     setInventory((prev) => [...prev, item])
   }
 
-  function deleteEquipment(id: string) {
+  function sellEquipment(id: string) {
     setInventory((prev) => prev.filter((item) => item.id !== id))
+  }
+
+  function sellAllEquipment() {
+    setInventory((prev) => prev.filter((item) => item.equipped))
   }
 
   function toggleEquip(id: string) {
@@ -98,7 +102,8 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
     reorderAbilities,
     inventory,
     addRandomEquipment,
-    deleteEquipment,
+    sellEquipment,
+    sellAllEquipment,
     toggleEquip,
     gold,
     setGold,

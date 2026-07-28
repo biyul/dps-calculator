@@ -319,7 +319,8 @@ function App() {
             onSetAll={player.setAllStats}
             inventory={player.inventory}
             onAddEquipment={player.addRandomEquipment}
-            onDeleteEquipment={player.deleteEquipment}
+            onSellEquipment={player.sellEquipment}
+            onSellAllEquipment={player.sellAllEquipment}
             onToggleEquip={player.toggleEquip}
           />
         </div>

@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card'
 interface EquipmentItemProps {
   piece: EquipmentPiece
   equipped: boolean
-  onDelete: () => void
+  onSell: () => void
   onToggleEquip: () => void
 }
 
@@ -23,7 +23,7 @@ function statColor(value: number) {
   return 'text-neutral-500'
 }
 
-export default function EquipmentItem({ piece, equipped, onDelete, onToggleEquip }: EquipmentItemProps) {
+export default function EquipmentItem({ piece, equipped, onSell, onToggleEquip }: EquipmentItemProps) {
   return (
     <Card className="w-44 shrink-0 text-sm">
       <div className="text-center">
@@ -48,8 +48,8 @@ export default function EquipmentItem({ piece, equipped, onDelete, onToggleEquip
         </tbody>
       </table>
       <div className="flex gap-1">
-        <Button type="button" variant="outline" size="xs" className="flex-1" onClick={onDelete}>
-          Delete
+        <Button type="button" variant="outline" size="xs" className="flex-1" onClick={onSell}>
+          Sell
         </Button>
         <Button
           type="button"

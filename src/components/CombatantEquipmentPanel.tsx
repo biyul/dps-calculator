@@ -1,6 +1,6 @@
 import { Minus, Plus } from 'lucide-react'
 import { ATTRIBUTES, type Stat } from '../stats.ts'
-import { getEquipmentPiece, type InventoryItem } from '../equipment.ts'
+import { getEquipmentPiece, SLOT_LABELS, SLOT_ORDER, type InventoryItem } from '../equipment.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 import StatInput from './StatInput.tsx'
 import EquipmentItem from './EquipmentItem.tsx'
@@ -14,7 +14,8 @@ interface CombatantEquipmentPanelProps {
   onSetAll: (mode: 'min' | 'max', group?: Stat[]) => void
   inventory?: InventoryItem[]
   onAddEquipment?: () => void
-  onDeleteEquipment?: (id: string) => void
+  onSellEquipment?: (id: string) => void
+  onSellAllEquipment?: () => void
   onToggleEquip?: (id: string) => void
 }
 
@@ -25,67 +26,85 @@ export default function CombatantEquipmentPanel({
   onSetAll,
   inventory,
   onAddEquipment,
-  onDeleteEquipment,
+  onSellEquipment,
+  onSellAllEquipment,
   onToggleEquip,
 }: CombatantEquipmentPanelProps) {
   return (
-    <div className="flex w-full max-w-lg flex-col">
+    <div className="flex w-full max-w-2xl flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
 
-      {inventory && onAddEquipment && onDeleteEquipment && onToggleEquip && (
+      {inventory && onAddEquipment && onSellEquipment && onSellAllEquipment && onToggleEquip && (
         <>
           <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Body
+            Equipment
           </div>
 
-          <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            Equipped
-          </div>
-          <section className="mb-3 flex items-center gap-3">
-            <div className="w-14 shrink-0 text-xs font-semibold text-muted-foreground uppercase">
-              Body
+          <div className="mb-4 flex flex-col gap-6 sm:flex-row">
+            <div className="sm:w-64 sm:shrink-0">
+              <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Equipped
+              </div>
+              <section className="flex flex-col gap-2">
+                {SLOT_ORDER.map((slot) => {
+                  const equippedItem = inventory.find(
+                    (item) => item.equipped && getEquipmentPiece(item.key)?.slot === slot,
+                  )
+                  const piece = equippedItem ? getEquipmentPiece(equippedItem.key) : undefined
+                  return (
+                    <div key={slot} className="flex items-center gap-3">
+                      <div className="w-14 shrink-0 text-xs font-semibold text-muted-foreground uppercase">
+                        {SLOT_LABELS[slot]}
+                      </div>
+                      {piece && equippedItem ? (
+                        <EquipmentItem
+                          piece={piece}
+                          equipped
+                          onSell={() => onSellEquipment(equippedItem.id)}
+                          onToggleEquip={() => onToggleEquip(equippedItem.id)}
+                        />
+                      ) : (
+                        <EmptySlotCard />
+                      )}
+                    </div>
+                  )
+                })}
+              </section>
             </div>
-            {(() => {
-              const equippedItem = inventory.find((item) => item.equipped)
-              if (!equippedItem) return <EmptySlotCard />
-              const piece = getEquipmentPiece(equippedItem.key)
-              if (!piece) return <EmptySlotCard />
-              return (
-                <EquipmentItem
-                  piece={piece}
-                  equipped
-                  onDelete={() => onDeleteEquipment(equippedItem.id)}
-                  onToggleEquip={() => onToggleEquip(equippedItem.id)}
-                />
-              )
-            })()}
-          </section>
 
-          <div className="mb-1 flex items-center justify-between">
-            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-              Inventory
-            </span>
-            <Button type="button" size="xs" onClick={onAddEquipment}>
-              Add
-            </Button>
+            <div className="flex-1">
+              <div className="mb-1 flex items-center justify-between">
+                <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                  Inventory
+                </span>
+                <div className="flex gap-1">
+                  <Button type="button" variant="outline" size="xs" onClick={onSellAllEquipment}>
+                    Sell All
+                  </Button>
+                  <Button type="button" size="xs" onClick={onAddEquipment}>
+                    Add
+                  </Button>
+                </div>
+              </div>
+              <section className="flex flex-wrap gap-2">
+                {inventory
+                  .filter((item) => !item.equipped)
+                  .map((item) => {
+                    const piece = getEquipmentPiece(item.key)
+                    if (!piece) return null
+                    return (
+                      <EquipmentItem
+                        key={item.id}
+                        piece={piece}
+                        equipped={false}
+                        onSell={() => onSellEquipment(item.id)}
+                        onToggleEquip={() => onToggleEquip(item.id)}
+                      />
+                    )
+                  })}
+              </section>
+            </div>
           </div>
-          <section className="mb-4 flex flex-wrap gap-2">
-            {inventory
-              .filter((item) => !item.equipped)
-              .map((item) => {
-                const piece = getEquipmentPiece(item.key)
-                if (!piece) return null
-                return (
-                  <EquipmentItem
-                    key={item.id}
-                    piece={piece}
-                    equipped={false}
-                    onDelete={() => onDeleteEquipment(item.id)}
-                    onToggleEquip={() => onToggleEquip(item.id)}
-                  />
-                )
-              })}
-          </section>
         </>
       )}
 
