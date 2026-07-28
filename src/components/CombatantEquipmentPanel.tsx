@@ -4,6 +4,7 @@ import { getEquipmentPiece, type InventoryItem } from '../equipment.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 import StatInput from './StatInput.tsx'
 import EquipmentItem from './EquipmentItem.tsx'
+import EmptySlotCard from './EmptySlotCard.tsx'
 import { Button } from '@/components/ui/button'
 
 interface CombatantEquipmentPanelProps {
@@ -37,30 +38,28 @@ export default function CombatantEquipmentPanel({
             Body
           </div>
 
-          {inventory.some((item) => item.equipped) && (
-            <>
-              <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                Equipped
-              </div>
-              <section className="mb-3 flex flex-col">
-                {inventory
-                  .filter((item) => item.equipped)
-                  .map((item) => {
-                    const piece = getEquipmentPiece(item.key)
-                    if (!piece) return null
-                    return (
-                      <EquipmentItem
-                        key={item.id}
-                        piece={piece}
-                        equipped
-                        onDelete={() => onDeleteEquipment(item.id)}
-                        onToggleEquip={() => onToggleEquip(item.id)}
-                      />
-                    )
-                  })}
-              </section>
-            </>
-          )}
+          <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            Equipped
+          </div>
+          <section className="mb-3 flex items-center gap-3">
+            <div className="w-14 shrink-0 text-xs font-semibold text-muted-foreground uppercase">
+              Body
+            </div>
+            {(() => {
+              const equippedItem = inventory.find((item) => item.equipped)
+              if (!equippedItem) return <EmptySlotCard />
+              const piece = getEquipmentPiece(equippedItem.key)
+              if (!piece) return <EmptySlotCard />
+              return (
+                <EquipmentItem
+                  piece={piece}
+                  equipped
+                  onDelete={() => onDeleteEquipment(equippedItem.id)}
+                  onToggleEquip={() => onToggleEquip(equippedItem.id)}
+                />
+              )
+            })()}
+          </section>
 
           <div className="mb-1 flex items-center justify-between">
             <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
@@ -70,7 +69,7 @@ export default function CombatantEquipmentPanel({
               Add
             </Button>
           </div>
-          <section className="mb-4 flex flex-col">
+          <section className="mb-4 flex flex-wrap gap-2">
             {inventory
               .filter((item) => !item.equipped)
               .map((item) => {

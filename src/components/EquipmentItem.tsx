@@ -1,5 +1,6 @@
 import type { EquipmentPiece } from '../equipment.ts'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 
 interface EquipmentItemProps {
   piece: EquipmentPiece
@@ -24,23 +25,10 @@ function statColor(value: number) {
 
 export default function EquipmentItem({ piece, equipped, onDelete, onToggleEquip }: EquipmentItemProps) {
   return (
-    <div className="flex flex-col gap-2 border-b py-2 text-sm last:border-b-0">
-      <div className="flex items-center gap-2">
-        <div className="flex-1 font-semibold">
-          {piece.label}
-          <span className="font-normal text-muted-foreground"> ({piece.type})</span>
-        </div>
-        <Button type="button" variant="outline" size="xs" onClick={onDelete}>
-          Delete
-        </Button>
-        <Button
-          type="button"
-          variant={equipped ? 'default' : 'outline'}
-          size="xs"
-          onClick={onToggleEquip}
-        >
-          {equipped ? 'Unequip' : 'Equip'}
-        </Button>
+    <Card className="w-44 shrink-0 text-sm">
+      <div className="text-center">
+        <div className="font-semibold">{piece.label}</div>
+        <div className="text-[10px] text-muted-foreground uppercase">{piece.type}</div>
       </div>
       <table className="w-full text-xs">
         <tbody>
@@ -59,6 +47,20 @@ export default function EquipmentItem({ piece, equipped, onDelete, onToggleEquip
           })}
         </tbody>
       </table>
-    </div>
+      <div className="flex gap-1">
+        <Button type="button" variant="outline" size="xs" className="flex-1" onClick={onDelete}>
+          Delete
+        </Button>
+        <Button
+          type="button"
+          variant={equipped ? 'default' : 'outline'}
+          size="xs"
+          className="flex-1"
+          onClick={onToggleEquip}
+        >
+          {equipped ? 'Unequip' : 'Equip'}
+        </Button>
+      </div>
+    </Card>
   )
 }
