@@ -31,7 +31,7 @@ export default function CombatantEquipmentPanel({
   onToggleEquip,
 }: CombatantEquipmentPanelProps) {
   return (
-    <div className="flex w-full max-w-2xl flex-col">
+    <div className="flex w-full max-w-5xl flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
 
       {inventory && onAddEquipment && onSellEquipment && onSellAllEquipment && onToggleEquip && (
@@ -40,108 +40,104 @@ export default function CombatantEquipmentPanel({
             Equipment
           </div>
 
-          <div className="mb-4 flex flex-col gap-6 sm:flex-row">
-            <div className="sm:w-64 sm:shrink-0">
-              <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                Equipped
-              </div>
-              <section className="flex flex-col gap-2">
-                {SLOT_ORDER.map((slot) => {
-                  const equippedItem = inventory.find(
-                    (item) => item.equipped && getEquipmentPiece(item.key)?.slot === slot,
-                  )
-                  const piece = equippedItem ? getEquipmentPiece(equippedItem.key) : undefined
-                  return (
-                    <div key={slot} className="flex items-center gap-3">
-                      <div className="w-14 shrink-0 text-xs font-semibold text-muted-foreground uppercase">
-                        {SLOT_LABELS[slot]}
-                      </div>
-                      {piece && equippedItem ? (
-                        <EquipmentItem
-                          piece={piece}
-                          equipped
-                          onSell={() => onSellEquipment(equippedItem.id)}
-                          onToggleEquip={() => onToggleEquip(equippedItem.id)}
-                        />
-                      ) : (
-                        <EmptySlotCard />
-                      )}
-                    </div>
-                  )
-                })}
-              </section>
-            </div>
-
-            <div className="flex-1">
-              <div className="mb-1 flex items-center justify-between">
-                <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-                  Inventory
-                </span>
-                <div className="flex gap-1">
-                  <Button type="button" variant="outline" size="xs" onClick={onSellAllEquipment}>
-                    Sell All
-                  </Button>
-                  <Button type="button" size="xs" onClick={onAddEquipment}>
-                    Add
-                  </Button>
+          <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            Equipped
+          </div>
+          <section className="mb-4 flex flex-wrap gap-4">
+            {SLOT_ORDER.map((slot) => {
+              const equippedItem = inventory.find(
+                (item) => item.equipped && getEquipmentPiece(item.key)?.slot === slot,
+              )
+              const piece = equippedItem ? getEquipmentPiece(equippedItem.key) : undefined
+              return (
+                <div key={slot} className="flex flex-col items-center gap-1">
+                  <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                    {SLOT_LABELS[slot]}
+                  </div>
+                  {piece && equippedItem ? (
+                    <EquipmentItem
+                      piece={piece}
+                      equipped
+                      onSell={() => onSellEquipment(equippedItem.id)}
+                      onToggleEquip={() => onToggleEquip(equippedItem.id)}
+                    />
+                  ) : (
+                    <EmptySlotCard />
+                  )}
                 </div>
-              </div>
-              <section className="flex flex-wrap gap-2">
-                {inventory
-                  .filter((item) => !item.equipped)
-                  .map((item) => {
-                    const piece = getEquipmentPiece(item.key)
-                    if (!piece) return null
-                    return (
-                      <EquipmentItem
-                        key={item.id}
-                        piece={piece}
-                        equipped={false}
-                        onSell={() => onSellEquipment(item.id)}
-                        onToggleEquip={() => onToggleEquip(item.id)}
-                      />
-                    )
-                  })}
-              </section>
+              )
+            })}
+          </section>
+
+          <div className="mb-1 flex items-center justify-between">
+            <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Inventory
+            </span>
+            <div className="flex gap-1">
+              <Button type="button" variant="outline" size="xs" onClick={onSellAllEquipment}>
+                Sell All
+              </Button>
+              <Button type="button" size="xs" onClick={onAddEquipment}>
+                Add
+              </Button>
             </div>
           </div>
+          <section className="mb-4 flex flex-wrap gap-2">
+            {inventory
+              .filter((item) => !item.equipped)
+              .map((item) => {
+                const piece = getEquipmentPiece(item.key)
+                if (!piece) return null
+                return (
+                  <EquipmentItem
+                    key={item.id}
+                    piece={piece}
+                    equipped={false}
+                    onSell={() => onSellEquipment(item.id)}
+                    onToggleEquip={() => onToggleEquip(item.id)}
+                  />
+                )
+              })}
+          </section>
         </>
       )}
 
-      <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-        Attributes
-      </div>
-      <div className="flex justify-end gap-1 pb-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-xs"
-          aria-label={`Set all ${title} attributes to 0`}
-          onClick={() => onSetAll('min', ATTRIBUTES)}
-        >
-          <Minus />
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-xs"
-          aria-label={`Set all ${title} attributes to max`}
-          onClick={() => onSetAll('max', ATTRIBUTES)}
-        >
-          <Plus />
-        </Button>
-      </div>
+      <div className="mx-auto w-full max-w-lg">
+        <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+          Attributes
+        </div>
+        <div className="flex justify-end gap-1 pb-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-xs"
+            aria-label={`Set all ${title} attributes to 0`}
+            onClick={() => onSetAll('min', ATTRIBUTES)}
+          >
+            <Minus />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-xs"
+            aria-label={`Set all ${title} attributes to max`}
+            onClick={() => onSetAll('max', ATTRIBUTES)}
+          >
+            <Plus />
+          </Button>
+        </div>
 
-      <section className="flex flex-col">
-        {ATTRIBUTES.map((stat) => (
-          <StatInput
-            key={stat.key}
-            stat={stat}
-            value={stats[stat.key]}
-            onChange={(value) => onUpdateStat(stat.key, value)}
-          />
-        ))}
-      </section>
+        <section className="flex flex-col">
+          {ATTRIBUTES.map((stat) => (
+            <StatInput
+              key={stat.key}
+              stat={stat}
+              value={stats[stat.key]}
+              onChange={(value) => onUpdateStat(stat.key, value)}
+            />
+          ))}
+        </section>
+      </div>
     </div>
   )
 }
