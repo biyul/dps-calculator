@@ -56,6 +56,7 @@ export interface CombatantInput {
   intelligence: number
   abilities: AbilityValues
   abilityOrder: string[]
+  startingHp?: number
 }
 
 interface RawAttack {
@@ -138,6 +139,26 @@ function buildCombatantRegenTicks(combatant: CombatantInput): RawRegen[] {
   return ticks
 }
 
+// Scans a resolved timeline for the last known HP value of the given combatant,
+// so it can be carried over as the starting HP of their next fight.
+export function getFinalHp(timeline: TimelineEvent[], label: string): number | undefined {
+  let hp: number | undefined
+
+  for (const event of timeline) {
+    if (event.kind === 'attack' && event.targetLabel === label) {
+      hp = event.targetHpAfter
+    }
+    if (event.kind === 'attack' && event.attackerLabel === label && event.lifesteal) {
+      hp = event.lifesteal.attackerHpAfter
+    }
+    if (event.kind === 'regen' && event.label === label && event.hpAfter !== undefined) {
+      hp = event.hpAfter
+    }
+  }
+
+  return hp
+}
+
 export function buildTimeline(combatants: [CombatantInput, CombatantInput]): TimelineEvent[] {
   const [a, b] = combatants
 
@@ -150,7 +171,10 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
 
   const combatantByLabel: Record<string, CombatantInput> = { [a.label]: a, [b.label]: b }
   const maxHp: Record<string, number> = { [a.label]: a.hp, [b.label]: b.hp }
-  const currentHp: Record<string, number> = { ...maxHp }
+  const currentHp: Record<string, number> = {
+    [a.label]: Math.min(a.startingHp ?? a.hp, maxHp[a.label]),
+    [b.label]: Math.min(b.startingHp ?? b.hp, maxHp[b.label]),
+  }
   const currentMp: Record<string, number> = { [a.label]: a.mp, [b.label]: b.mp }
   const abilityRotationIndex: Record<string, number> = { [a.label]: 0, [b.label]: 0 }
   const lifestealByLabel: Record<string, number> = {

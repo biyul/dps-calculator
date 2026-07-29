@@ -6,6 +6,7 @@ import { getEquipmentTotal, type EquipmentPiece, type InventoryItem } from './eq
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
 import {
   buildTimeline,
+  getFinalHp,
   REGEN_INTERVAL_SEC,
   type AttackEvent,
   type CombatantInput,
@@ -34,6 +35,7 @@ function buildCombatantInput(
   inventory: InventoryItem[],
   abilities: AbilityValues,
   abilityOrder: string[],
+  startingHp?: number,
 ): CombatantInput {
   return {
     label,
@@ -51,6 +53,7 @@ function buildCombatantInput(
     intelligence: stats.intelligence,
     abilities,
     abilityOrder,
+    startingHp,
   }
 }
 
@@ -82,17 +85,31 @@ function App() {
   const [visibleGroupCount, setVisibleGroupCount] = useState(0)
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
   const [earnings, setEarnings] = useState<FightEarnings | null>(null)
+  const [playerHp, setPlayerHp] = useState<number | null>(null)
+
+  const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
+  const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
+  const isPlayerDefeated = playerCurrentHp <= 0
 
   function runSimulation(foeStats: StatValues = foe.stats) {
     setTimeline(
       buildTimeline([
-        buildCombatantInput('Player', player.stats, player.inventory, player.abilities, player.abilityOrder),
+        buildCombatantInput(
+          'Player',
+          player.stats,
+          player.inventory,
+          player.abilities,
+          player.abilityOrder,
+          playerCurrentHp,
+        ),
         buildCombatantInput('Foe', foeStats, foe.inventory, foe.abilities, foe.abilityOrder),
       ]),
     )
   }
 
   function handleFight(preset: FoePreset) {
+    if (isPlayerDefeated) return
+
     const newFoeStats: StatValues = {
       ...foe.stats,
       strength: preset.strength,
@@ -118,6 +135,12 @@ function App() {
       setEarnings(null)
       return
     }
+
+    const finalPlayerHp = getFinalHp(timeline, 'Player')
+    if (finalPlayerHp !== undefined) {
+      setPlayerHp(Math.max(0, finalPlayerHp))
+    }
+
     const preset = FOE_PRESETS.find((p) => p.key === selectedFoeKey)
     if (!preset) return
     const won = victoryEvent.winnerLabel === 'Player'
@@ -213,10 +236,29 @@ function App() {
         ))}
       </nav>
 
+      {screen === 'fight' && (
+        <div className="mb-4 text-center">
+          <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            Player HP
+          </div>
+          <div className={`text-lg font-bold tabular-nums ${isPlayerDefeated ? 'text-red-600' : ''}`}>
+            {playerCurrentHp} / {playerMaxHp}
+          </div>
+          {isPlayerDefeated && (
+            <div className="text-xs text-red-600">You have been defeated and cannot fight.</div>
+          )}
+        </div>
+      )}
+
       {screen === 'fight' && !selectedFoeKey && (
         <div className="mx-auto flex max-w-375 flex-wrap items-stretch justify-center gap-6">
           {FOE_PRESETS.map((preset) => (
-            <FoeCard key={preset.key} preset={preset} onFight={() => handleFight(preset)} />
+            <FoeCard
+              key={preset.key}
+              preset={preset}
+              onFight={() => handleFight(preset)}
+              disabled={isPlayerDefeated}
+            />
           ))}
         </div>
       )}
@@ -241,6 +283,7 @@ function App() {
               variant="outline"
               size="icon-xs"
               aria-label="Rerun simulation"
+              disabled={isPlayerDefeated}
               onClick={() => runSimulation()}
             >
               <RotateCw />
@@ -309,7 +352,7 @@ function App() {
           )}
 
           <div className="mt-4 flex justify-center gap-2">
-            <Button type="button" onClick={() => runSimulation()}>
+            <Button type="button" disabled={isPlayerDefeated} onClick={() => runSimulation()}>
               Fight Again
             </Button>
             <Button type="button" variant="outline" onClick={() => setSelectedFoeKey(null)}>

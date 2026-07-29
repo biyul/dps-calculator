@@ -6,9 +6,10 @@ import { Button } from '@/components/ui/button'
 interface FoeCardProps {
   preset: FoePreset
   onFight: () => void
+  disabled?: boolean
 }
 
-export default function FoeCard({ preset, onFight }: FoeCardProps) {
+export default function FoeCard({ preset, onFight, disabled }: FoeCardProps) {
   const stats = getFoePreviewStats(preset)
 
   return (
@@ -62,7 +63,7 @@ export default function FoeCard({ preset, onFight }: FoeCardProps) {
         </tbody>
       </table>
 
-      <Button type="button" onClick={onFight} className="mt-auto">
+      <Button type="button" onClick={onFight} disabled={disabled} className="mt-auto">
         FIGHT
       </Button>
     </div>
