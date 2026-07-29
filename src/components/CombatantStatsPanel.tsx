@@ -1,4 +1,5 @@
 import { COMBAT_STATS, getCombatStatBreakdown } from '../combatStats.ts'
+import { CORE_STATS } from '../stats.ts'
 import type { InventoryItem } from '../equipment.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 
@@ -6,7 +7,6 @@ interface CombatantStatsPanelProps {
   title: string
   stats: StatValues
   powerLevel: number
-  gold: number
   inventory?: InventoryItem[]
 }
 
@@ -28,7 +28,6 @@ export default function CombatantStatsPanel({
   title,
   stats,
   powerLevel,
-  gold,
   inventory,
 }: CombatantStatsPanelProps) {
   return (
@@ -42,12 +41,17 @@ export default function CombatantStatsPanel({
           </div>
           <div className="text-5xl font-bold tabular-nums">{powerLevel}</div>
         </div>
-        <div className="text-center">
-          <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-            Gold
+      </div>
+
+      <div className="flex justify-center gap-8 pb-4">
+        {CORE_STATS.map((stat) => (
+          <div key={stat.key} className="w-28 text-center">
+            <div className="text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+              {stat.label}
+            </div>
+            <div className="text-5xl font-bold tabular-nums">{stats[stat.key]}</div>
           </div>
-          <div className="text-5xl font-bold tabular-nums">{gold}</div>
-        </div>
+        ))}
       </div>
 
       <div className="border-y py-3">

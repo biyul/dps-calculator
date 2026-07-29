@@ -404,7 +404,6 @@ function App() {
             title="Player"
             stats={player.stats}
             powerLevel={player.powerLevel}
-            gold={player.gold}
             inventory={player.inventory}
           />
         </div>

@@ -22,7 +22,6 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
   const [abilities, setAbilities] = useState<AbilityValues>(initialAbilities)
   const [abilityOrder, setAbilityOrder] = useState<string[]>(initialAbilityOrder)
   const [inventory, setInventory] = useState<InventoryItem[]>([])
-  const [gold, setGold] = useState(0)
 
   const powerLevel = useMemo(() => {
     const total = CORE_STATS.reduce((sum, stat) => {
@@ -106,7 +105,5 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
     sellEquipment,
     sellAllEquipment,
     toggleEquip,
-    gold,
-    setGold,
   }
 }
