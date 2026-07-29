@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
-import { getEquipmentTotal, type InventoryItem } from './equipment.ts'
+import { getEquipmentTotal, type EquipmentPiece, type InventoryItem } from './equipment.ts'
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
 import {
   buildTimeline,
@@ -57,6 +57,12 @@ function buildCombatantInput(
 type Screen = 'fight' | 'stats' | 'core' | 'abilities' | 'equipment'
 type LogView = 'log' | 'columns'
 
+interface FightEarnings {
+  xp: number
+  gold: number
+  item?: EquipmentPiece
+}
+
 const NAV_ITEMS: { key: Screen; label: string }[] = [
   { key: 'fight', label: 'Fight' },
   { key: 'stats', label: 'Stats' },
@@ -75,6 +81,7 @@ function App() {
   const [logView, setLogView] = useState<LogView>('log')
   const [visibleGroupCount, setVisibleGroupCount] = useState(0)
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
+  const [earnings, setEarnings] = useState<FightEarnings | null>(null)
 
   function runSimulation(foeStats: StatValues = foe.stats) {
     setTimeline(
@@ -107,15 +114,26 @@ function App() {
   const victoryEvent = timeline.find((e) => e.kind === 'victory')
 
   useEffect(() => {
-    if (!victoryEvent || !selectedFoeKey) return
+    if (!victoryEvent || !selectedFoeKey) {
+      setEarnings(null)
+      return
+    }
     const preset = FOE_PRESETS.find((p) => p.key === selectedFoeKey)
     if (!preset) return
-    const multiplier = victoryEvent.winnerLabel === 'Player' ? 1 : 0.1
+    const won = victoryEvent.winnerLabel === 'Player'
+    const multiplier = won ? 1 : 0.1
+    const xpEarned = Math.round(preset.xpReward * multiplier)
+    const goldEarned = Math.round(preset.goldReward * multiplier)
+
     setMetaStats((prev) => ({
       ...prev,
-      xp: prev.xp + Math.round(preset.xpReward * multiplier),
-      gold: prev.gold + Math.round(preset.goldReward * multiplier),
+      xp: prev.xp + xpEarned,
+      gold: prev.gold + goldEarned,
     }))
+
+    const itemDropped = won ? player.addRandomEquipment() : undefined
+
+    setEarnings({ xp: xpEarned, gold: goldEarned, item: itemDropped })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeline])
 
@@ -261,6 +279,32 @@ function App() {
               <span>
                 <span className="font-bold">{visibleVictoryEvent.winnerLabel}</span> wins!
               </span>
+            </div>
+          )}
+
+          {visibleVictoryEvent && earnings && (
+            <div className="mt-3 flex flex-col items-center gap-1">
+              <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Spoils
+              </div>
+              <div className="flex gap-4 font-mono text-sm">
+                <span>
+                  <span className="text-muted-foreground">XP </span>
+                  <span className="font-bold text-green-600">+{earnings.xp}</span>
+                </span>
+                <span>
+                  <span className="text-muted-foreground">Gold </span>
+                  <span className="font-bold text-green-600">+{earnings.gold}</span>
+                </span>
+              </div>
+              {earnings.item && (
+                <div className="font-mono text-sm">
+                  <span className="text-muted-foreground">Item </span>
+                  <span className="font-bold">
+                    {earnings.item.label} ({earnings.item.type})
+                  </span>
+                </div>
+              )}
             </div>
           )}
 
