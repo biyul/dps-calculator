@@ -16,12 +16,13 @@ import {
 import { useCombatantStats, type AbilityValues, type StatValues } from './useCombatantStats.ts'
 import { useMetaStats, META_STATS } from './useMetaStats.ts'
 import { eventOrder } from './eventOrder.ts'
+import { totalLevelUpCost } from './levelUpCost.ts'
 import CombatantStatsPanel from './components/CombatantStatsPanel.tsx'
-import CombatantCorePanel from './components/CombatantCorePanel.tsx'
 import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
 import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import FoeCard from './components/FoeCard.tsx'
 import InnCard from './components/InnCard.tsx'
+import LevelUpCard from './components/LevelUpCard.tsx'
 import EventLog from './components/EventLog.tsx'
 import EventColumns from './components/EventColumns.tsx'
 import { Button } from '@/components/ui/button'
@@ -58,7 +59,7 @@ function buildCombatantInput(
   }
 }
 
-type Screen = 'fight' | 'town' | 'stats' | 'core' | 'abilities' | 'equipment'
+type Screen = 'fight' | 'town' | 'stats' | 'abilities' | 'equipment'
 type LogView = 'log' | 'columns'
 
 interface FightEarnings {
@@ -71,7 +72,6 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
   { key: 'fight', label: 'Fight' },
   { key: 'town', label: 'Town' },
   { key: 'stats', label: 'Stats' },
-  { key: 'core', label: 'Core' },
   { key: 'abilities', label: 'Abilities' },
   { key: 'equipment', label: 'Equipment' },
 ]
@@ -88,6 +88,7 @@ function App() {
   const [timeline, setTimeline] = useState<TimelineEvent[]>([])
   const [earnings, setEarnings] = useState<FightEarnings | null>(null)
   const [playerHp, setPlayerHp] = useState<number | null>(null)
+  const [showLevelUp, setShowLevelUp] = useState(false)
 
   const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
   const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
@@ -129,6 +130,19 @@ function App() {
 
   function handleRest() {
     setPlayerHp(null)
+  }
+
+  function handleLevelUp(pending: Record<string, number>) {
+    const totalIncrements = Object.values(pending).reduce((sum, count) => sum + count, 0)
+    if (totalIncrements === 0) return
+
+    const cost = totalLevelUpCost(metaStats.level, totalIncrements)
+    if (metaStats.xp < cost) return
+
+    setMetaStats((prev) => ({ ...prev, level: prev.level + totalIncrements, xp: prev.xp - cost }))
+    for (const [statKey, count] of Object.entries(pending)) {
+      if (count > 0) player.updateStat(statKey, player.stats[statKey] + count)
+    }
   }
 
   const logEvents = timeline.filter(
@@ -364,8 +378,23 @@ function App() {
       )}
 
       {screen === 'town' && (
-        <div className="mx-auto flex max-w-375 flex-wrap items-stretch justify-center gap-6">
-          <InnCard onRest={handleRest} disabled={playerCurrentHp >= playerMaxHp} />
+        <div className="mx-auto flex max-w-375 flex-col items-center gap-6">
+          <div className="flex flex-wrap items-stretch justify-center gap-6">
+            <InnCard
+              onRest={handleRest}
+              restDisabled={playerCurrentHp >= playerMaxHp}
+              onToggleLevelUp={() => setShowLevelUp((v) => !v)}
+              levelUpActive={showLevelUp}
+            />
+          </div>
+          {showLevelUp && (
+            <LevelUpCard
+              stats={player.stats}
+              level={metaStats.level}
+              xp={metaStats.xp}
+              onConfirm={handleLevelUp}
+            />
+          )}
         </div>
       )}
 
@@ -377,17 +406,6 @@ function App() {
             powerLevel={player.powerLevel}
             gold={player.gold}
             inventory={player.inventory}
-          />
-        </div>
-      )}
-
-      {screen === 'core' && (
-        <div className="mx-auto flex max-w-375 flex-col items-center gap-10 lg:flex-row lg:items-start lg:justify-center">
-          <CombatantCorePanel
-            title="Player"
-            stats={player.stats}
-            onUpdateStat={player.updateStat}
-            onSetAll={player.setAllStats}
           />
         </div>
       )}
