@@ -21,6 +21,7 @@ import CombatantCorePanel from './components/CombatantCorePanel.tsx'
 import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
 import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import FoeCard from './components/FoeCard.tsx'
+import InnCard from './components/InnCard.tsx'
 import EventLog from './components/EventLog.tsx'
 import EventColumns from './components/EventColumns.tsx'
 import { Button } from '@/components/ui/button'
@@ -57,7 +58,7 @@ function buildCombatantInput(
   }
 }
 
-type Screen = 'fight' | 'stats' | 'core' | 'abilities' | 'equipment'
+type Screen = 'fight' | 'town' | 'stats' | 'core' | 'abilities' | 'equipment'
 type LogView = 'log' | 'columns'
 
 interface FightEarnings {
@@ -68,6 +69,7 @@ interface FightEarnings {
 
 const NAV_ITEMS: { key: Screen; label: string }[] = [
   { key: 'fight', label: 'Fight' },
+  { key: 'town', label: 'Town' },
   { key: 'stats', label: 'Stats' },
   { key: 'core', label: 'Core' },
   { key: 'abilities', label: 'Abilities' },
@@ -123,6 +125,10 @@ function App() {
     })
     setSelectedFoeKey(preset.key)
     runSimulation(newFoeStats)
+  }
+
+  function handleRest() {
+    setPlayerHp(null)
   }
 
   const logEvents = timeline.filter(
@@ -211,6 +217,15 @@ function App() {
           DPS Calculator
         </h1>
 
+        <div className="absolute top-1/2 left-0 -translate-y-1/2 text-center">
+          <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+            Player HP
+          </div>
+          <div className={`text-lg font-bold tabular-nums ${isPlayerDefeated ? 'text-red-600' : ''}`}>
+            {playerCurrentHp} / {playerMaxHp}
+          </div>
+        </div>
+
         <div className="absolute top-1/2 right-0 flex -translate-y-1/2 gap-4">
           {META_STATS.map((stat) => (
             <div key={stat.key} className="text-center">
@@ -235,20 +250,6 @@ function App() {
           </Button>
         ))}
       </nav>
-
-      {screen === 'fight' && (
-        <div className="mb-4 text-center">
-          <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            Player HP
-          </div>
-          <div className={`text-lg font-bold tabular-nums ${isPlayerDefeated ? 'text-red-600' : ''}`}>
-            {playerCurrentHp} / {playerMaxHp}
-          </div>
-          {isPlayerDefeated && (
-            <div className="text-xs text-red-600">You have been defeated and cannot fight.</div>
-          )}
-        </div>
-      )}
 
       {screen === 'fight' && !selectedFoeKey && (
         <div className="mx-auto flex max-w-375 flex-wrap items-stretch justify-center gap-6">
@@ -359,6 +360,12 @@ function App() {
               Go Back to Listings
             </Button>
           </div>
+        </div>
+      )}
+
+      {screen === 'town' && (
+        <div className="mx-auto flex max-w-375 flex-wrap items-stretch justify-center gap-6">
+          <InnCard onRest={handleRest} disabled={playerCurrentHp >= playerMaxHp} />
         </div>
       )}
 
