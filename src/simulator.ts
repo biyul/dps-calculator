@@ -220,7 +220,7 @@ export function buildTimeline(combatants: [CombatantInput, CombatantInput]): Tim
       : attacker.attackDamage
 
     const isBlocked = Math.random() * 100 < target.blockChance
-    const isCrit = Math.random() * 100 < attacker.critChance
+    const isCrit = ability ? false : Math.random() * 100 < attacker.critChance
     const damage = isBlocked
       ? 0
       : isCrit
