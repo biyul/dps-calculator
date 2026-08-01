@@ -58,6 +58,7 @@ export default function CombatantEquipmentPanel({
                     <EquipmentItem
                       piece={piece}
                       level={equippedItem.level}
+                      mods={equippedItem.mods}
                       equipped
                       onSell={() => onSellEquipment(equippedItem.id)}
                       onToggleEquip={() => onToggleEquip(equippedItem.id)}
@@ -94,6 +95,7 @@ export default function CombatantEquipmentPanel({
                     key={item.id}
                     piece={piece}
                     level={item.level}
+                    mods={item.mods}
                     equipped={false}
                     onSell={() => onSellEquipment(item.id)}
                     onToggleEquip={() => onToggleEquip(item.id)}

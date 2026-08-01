@@ -1,6 +1,8 @@
 // Equipment definitions for the DPS calculator. Definitions are static templates;
 // a combatant's actual gear is a list of owned instances (see InventoryItem) so
 // duplicates of the same definition are possible.
+import { ATTRIBUTES } from './stats.ts'
+
 export type EquipmentSlot = 'head' | 'body' | 'arms' | 'waist' | 'legs'
 export type EquipmentType = 'Light' | 'Heavy' | 'Mystic'
 
@@ -76,11 +78,60 @@ export function getLeveledStat(piece: EquipmentPiece, level: number, field: Leve
   return Math.ceil(piece[field] * getLevelMultiplier(level))
 }
 
+// Random stat mods an item can roll, independent of the item's Level.
+export type ModKey = 'block' | 'speed' | 'critChance' | 'critDamage' | 'healthReg' | 'lifesteal'
+
+const MOD_MAX: Record<ModKey, number> = {
+  block: 5,
+  speed: 5,
+  critChance: 10,
+  critDamage: 25,
+  healthReg: 5,
+  lifesteal: 5,
+}
+
+const MOD_KEYS = Object.keys(MOD_MAX) as ModKey[]
+
+export const MAX_ITEM_MODS = 2
+
+export interface ModDef {
+  key: ModKey
+  label: string
+  unit: string
+  max: number
+}
+
+export const MODS: ModDef[] = MOD_KEYS.map((key) => {
+  const attribute = ATTRIBUTES.find((a) => a.key === key)
+  return { key, label: attribute?.label ?? key, unit: attribute?.unit ?? '%', max: MOD_MAX[key] }
+})
+
+export function getModDef(key: ModKey): ModDef | undefined {
+  return MODS.find((mod) => mod.key === key)
+}
+
+export interface ItemMod {
+  key: ModKey
+  value: number
+}
+
+// Rolls 0-2 mods for a newly dropped item, each a different stat, each with a
+// random value from 1 up to that mod's max.
+export function rollItemMods(): ItemMod[] {
+  const modCount = Math.floor(Math.random() * (MAX_ITEM_MODS + 1))
+  const shuffled = [...MODS].sort(() => Math.random() - 0.5)
+  return shuffled.slice(0, modCount).map((mod) => ({
+    key: mod.key,
+    value: Math.floor(Math.random() * mod.max) + 1,
+  }))
+}
+
 export interface InventoryItem {
   id: string
   key: string
   level: number
   equipped: boolean
+  mods: ItemMod[]
 }
 
 export function getEquipmentPiece(key: string): EquipmentPiece | undefined {
@@ -98,4 +149,11 @@ export function getEquipmentTotal(
       if (!piece) return sum
       return sum + (field === 'speed' ? piece.speed : getLeveledStat(piece, item.level, field))
     }, 0)
+}
+
+// Mods are not scaled by the item's Level.
+export function getEquipmentModTotal(inventory: InventoryItem[], key: ModKey): number {
+  return inventory
+    .filter((item) => item.equipped)
+    .reduce((sum, item) => sum + (item.mods.find((mod) => mod.key === key)?.value ?? 0), 0)
 }

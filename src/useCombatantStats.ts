@@ -1,7 +1,13 @@
 import { useMemo, useState } from 'react'
 import { STATS, CORE_STATS, type Stat } from './stats.ts'
 import { ABILITIES } from './abilities.ts'
-import { EQUIPMENT, getEquipmentPiece, randomEquipmentLevel, type InventoryItem } from './equipment.ts'
+import {
+  EQUIPMENT,
+  getEquipmentPiece,
+  randomEquipmentLevel,
+  rollItemMods,
+  type InventoryItem,
+} from './equipment.ts'
 
 export type StatValues = Record<string, number>
 export type AbilityValues = Record<string, boolean>
@@ -64,6 +70,7 @@ export function useCombatantStats(
       key: picked.key,
       level: randomEquipmentLevel(),
       equipped: false,
+      mods: rollItemMods(),
     }
     setInventory((prev) => [...prev, item])
     return item

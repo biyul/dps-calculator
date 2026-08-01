@@ -1,7 +1,7 @@
 // Combat Stats: read-only values derived from base stats, core stats, attributes, and equipment.
 import { getBaseStat } from './baseStats.ts'
 import { getStatBase } from './stats.ts'
-import { getEquipmentTotal, type InventoryItem } from './equipment.ts'
+import { getEquipmentTotal, getEquipmentModTotal, type InventoryItem } from './equipment.ts'
 import type { StatValues } from './useCombatantStats.ts'
 
 export interface CombatStat {
@@ -43,19 +43,24 @@ export function getCombatStat(
     case 'resist':
       return getEquipmentTotal(inventory, 'resist')
     case 'block':
-      return stats.block
+      return stats.block + getEquipmentModTotal(inventory, 'block')
     case 'critChance':
-      return stats.dexterity + stats.critChance
+      return stats.dexterity + stats.critChance + getEquipmentModTotal(inventory, 'critChance')
     case 'critDamage':
-      return getStatBase('critDamage') + stats.critDamage
+      return getStatBase('critDamage') + stats.critDamage + getEquipmentModTotal(inventory, 'critDamage')
     case 'healthReg':
-      return stats.healthReg
+      return stats.healthReg + getEquipmentModTotal(inventory, 'healthReg')
     case 'lifesteal':
-      return stats.lifesteal
+      return stats.lifesteal + getEquipmentModTotal(inventory, 'lifesteal')
     case 'mpRegen':
       return getBaseStat('mpRegen') + stats.intelligence
     case 'speed':
-      return 100 + stats.speed + getEquipmentTotal(inventory, 'speed')
+      return (
+        100 +
+        stats.speed +
+        getEquipmentTotal(inventory, 'speed') +
+        getEquipmentModTotal(inventory, 'speed')
+      )
     default:
       throw new Error(`Unknown combat stat: ${key}`)
   }
@@ -89,7 +94,17 @@ function getEquipBonus(key: string, inventory: InventoryItem[]): number {
     case 'resist':
       return getEquipmentTotal(inventory, 'resist')
     case 'speed':
-      return getEquipmentTotal(inventory, 'speed')
+      return getEquipmentTotal(inventory, 'speed') + getEquipmentModTotal(inventory, 'speed')
+    case 'block':
+      return getEquipmentModTotal(inventory, 'block')
+    case 'critChance':
+      return getEquipmentModTotal(inventory, 'critChance')
+    case 'critDamage':
+      return getEquipmentModTotal(inventory, 'critDamage')
+    case 'healthReg':
+      return getEquipmentModTotal(inventory, 'healthReg')
+    case 'lifesteal':
+      return getEquipmentModTotal(inventory, 'lifesteal')
     default:
       return 0
   }
