@@ -386,9 +386,18 @@ function App() {
               })()}
             </div>
           )}
-          <Button type="button" onClick={handleDungeonExit}>
-            Leave
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              disabled={isPlayerDefeated}
+              onClick={() => activeDungeon && handleStartDungeon(activeDungeon)}
+            >
+              Adventure Again
+            </Button>
+            <Button type="button" variant="outline" onClick={handleDungeonExit}>
+              Leave
+            </Button>
+          </div>
         </div>
       )}
 
