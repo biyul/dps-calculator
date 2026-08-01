@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
-import { getEquipmentTotal, type EquipmentPiece, type InventoryItem } from './equipment.ts'
+import { getEquipmentPiece, getEquipmentTotal, type InventoryItem } from './equipment.ts'
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
 import {
   buildTimeline,
@@ -65,7 +65,7 @@ type LogView = 'log' | 'columns'
 interface FightEarnings {
   xp: number
   gold: number
-  item?: EquipmentPiece
+  item?: InventoryItem
 }
 
 const NAV_ITEMS: { key: Screen; label: string }[] = [
@@ -355,14 +355,18 @@ function App() {
                   <span className="font-bold text-green-600">+{earnings.gold}</span>
                 </span>
               </div>
-              {earnings.item && (
-                <div className="font-mono text-sm">
-                  <span className="text-muted-foreground">Item </span>
-                  <span className="font-bold">
-                    {earnings.item.label} ({earnings.item.type})
-                  </span>
-                </div>
-              )}
+              {earnings.item &&
+                (() => {
+                  const droppedPiece = getEquipmentPiece(earnings.item.key)
+                  return droppedPiece ? (
+                    <div className="font-mono text-sm">
+                      <span className="text-muted-foreground">Item </span>
+                      <span className="font-bold">
+                        {droppedPiece.label} ({droppedPiece.type}, Level {earnings.item.level})
+                      </span>
+                    </div>
+                  ) : null
+                })()}
             </div>
           )}
 

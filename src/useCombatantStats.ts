@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { STATS, CORE_STATS, type Stat } from './stats.ts'
 import { ABILITIES } from './abilities.ts'
-import { EQUIPMENT, getEquipmentPiece, type EquipmentPiece, type InventoryItem } from './equipment.ts'
+import { EQUIPMENT, getEquipmentPiece, randomEquipmentLevel, type InventoryItem } from './equipment.ts'
 
 export type StatValues = Record<string, number>
 export type AbilityValues = Record<string, boolean>
@@ -54,15 +54,16 @@ export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
     setAbilityOrder(newOrder)
   }
 
-  function addRandomEquipment(): EquipmentPiece {
+  function addRandomEquipment(): InventoryItem {
     const picked = EQUIPMENT[Math.floor(Math.random() * EQUIPMENT.length)]
     const item: InventoryItem = {
       id: crypto.randomUUID(),
       key: picked.key,
+      level: randomEquipmentLevel(),
       equipped: false,
     }
     setInventory((prev) => [...prev, item])
-    return picked
+    return item
   }
 
   function sellEquipment(id: string) {

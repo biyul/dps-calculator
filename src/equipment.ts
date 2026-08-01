@@ -54,9 +54,32 @@ export const EQUIPMENT: EquipmentPiece[] = SLOT_ORDER.flatMap((slot) =>
   })),
 )
 
+export const MIN_EQUIPMENT_LEVEL = 1
+export const MAX_EQUIPMENT_LEVEL = 100
+
+export function randomEquipmentLevel(): number {
+  return Math.floor(Math.random() * MAX_EQUIPMENT_LEVEL) + MIN_EQUIPMENT_LEVEL
+}
+
+// Level 1 -> 100% of base stats. Level 100 -> 250% of base stats, scaling linearly in between.
+function getLevelMultiplier(level: number): number {
+  return 1 + ((level - MIN_EQUIPMENT_LEVEL) / (MAX_EQUIPMENT_LEVEL - MIN_EQUIPMENT_LEVEL)) * 1.5
+}
+
+// Stats that scale with an equipped item's Level. Speed is deliberately excluded:
+// it always stays at its base value regardless of Level.
+export type LeveledStatField = 'hp' | 'mp' | 'armour' | 'resist'
+
+// The base stat, scaled by the item's Level. This is what actually gets factored
+// into a combatant's stats; the raw EquipmentPiece fields are the Level-1 baseline.
+export function getLeveledStat(piece: EquipmentPiece, level: number, field: LeveledStatField): number {
+  return Math.ceil(piece[field] * getLevelMultiplier(level))
+}
+
 export interface InventoryItem {
   id: string
   key: string
+  level: number
   equipped: boolean
 }
 
@@ -66,11 +89,13 @@ export function getEquipmentPiece(key: string): EquipmentPiece | undefined {
 
 export function getEquipmentTotal(
   inventory: InventoryItem[],
-  field: 'hp' | 'mp' | 'armour' | 'resist' | 'speed',
+  field: LeveledStatField | 'speed',
 ): number {
   return inventory
     .filter((item) => item.equipped)
-    .map((item) => getEquipmentPiece(item.key))
-    .filter((piece): piece is EquipmentPiece => piece !== undefined)
-    .reduce((sum, piece) => sum + piece[field], 0)
+    .reduce((sum, item) => {
+      const piece = getEquipmentPiece(item.key)
+      if (!piece) return sum
+      return sum + (field === 'speed' ? piece.speed : getLeveledStat(piece, item.level, field))
+    }, 0)
 }
