@@ -6,12 +6,18 @@ export interface DungeonReward {
   gold: number
 }
 
+export interface KeyItem {
+  key: string
+  name: string
+}
+
 export interface Dungeon {
   key: string
   name: string
   level: number
   stages: DungeonStage[]
   reward: DungeonReward
+  keyItem: KeyItem
 }
 
 export const DUNGEONS: Dungeon[] = [
@@ -25,5 +31,8 @@ export const DUNGEONS: Dungeon[] = [
       { type: 'treasure' },
     ],
     reward: { xp: 500, gold: 500 },
+    keyItem: { key: 'rats-nest-key', name: 'Rat Nest Key' },
   },
 ]
+
+export const KEY_ITEMS: KeyItem[] = DUNGEONS.map((dungeon) => dungeon.keyItem)

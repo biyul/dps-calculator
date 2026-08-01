@@ -1,6 +1,8 @@
+import { Key } from 'lucide-react'
 import { COMBAT_STATS, getCombatStatBreakdown } from '../combatStats.ts'
 import { CORE_STATS } from '../stats.ts'
 import type { InventoryItem } from '../equipment.ts'
+import type { KeyItem } from '../dungeons.ts'
 import type { StatValues } from '../useCombatantStats.ts'
 
 interface CombatantStatsPanelProps {
@@ -8,6 +10,7 @@ interface CombatantStatsPanelProps {
   stats: StatValues
   powerLevel: number
   inventory?: InventoryItem[]
+  keyItems?: KeyItem[]
 }
 
 function formatValue(value: number, decimals: number, unit?: string) {
@@ -29,6 +32,7 @@ export default function CombatantStatsPanel({
   stats,
   powerLevel,
   inventory,
+  keyItems,
 }: CombatantStatsPanelProps) {
   return (
     <div className="flex w-full max-w-2xl flex-col">
@@ -96,6 +100,29 @@ export default function CombatantStatsPanel({
           </tbody>
         </table>
       </div>
+
+      {keyItems && (
+        <div className="pt-3">
+          <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+            Key Items
+          </div>
+          {keyItems.length === 0 ? (
+            <div className="text-center text-sm text-muted-foreground">None</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+              {keyItems.map((item) => (
+                <div
+                  key={item.key}
+                  className="flex flex-col items-center gap-1 rounded-lg border p-3 text-center"
+                >
+                  <Key className="size-5 text-muted-foreground" />
+                  <span className="text-sm font-semibold">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   )
 }

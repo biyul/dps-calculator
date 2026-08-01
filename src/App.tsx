@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, RotateCw } from 'lucide-react'
+import { ArrowLeft, Key, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
 import { getEquipmentPiece, getEquipmentTotal, type InventoryItem } from './equipment.ts'
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
-import { DUNGEONS, type Dungeon } from './dungeons.ts'
+import { DUNGEONS, KEY_ITEMS, type Dungeon, type KeyItem } from './dungeons.ts'
 import {
   buildTimeline,
   getFinalHp,
@@ -74,6 +74,7 @@ interface TreasureReward {
   xp: number
   gold: number
   item: InventoryItem
+  keyItem?: KeyItem
 }
 
 const NAV_ITEMS: { key: Screen; label: string }[] = [
@@ -88,7 +89,7 @@ function App() {
   // DEV: Strength starts at 90 for testing.
   const player = useCombatantStats({ coreStatsBase: 10, initialStats: { strength: 90 } })
   const foe = useCombatantStats()
-  const { metaStats, setMetaStats } = useMetaStats()
+  const { metaStats, setMetaStats, keyItemKeys, addKeyItem } = useMetaStats()
   const [screen, setScreen] = useState<Screen>('fight')
   const [selectedFoeKey, setSelectedFoeKey] = useState<string | null>(null)
   const [animateLog, setAnimateLog] = useState(false)
@@ -161,7 +162,14 @@ function App() {
         xp: prev.xp + dungeon.reward.xp,
         gold: prev.gold + dungeon.reward.gold,
       }))
-      setTreasureReward({ xp: dungeon.reward.xp, gold: dungeon.reward.gold, item })
+      const isNewKeyItem = !keyItemKeys.includes(dungeon.keyItem.key)
+      if (isNewKeyItem) addKeyItem(dungeon.keyItem.key)
+      setTreasureReward({
+        xp: dungeon.reward.xp,
+        gold: dungeon.reward.gold,
+        item,
+        keyItem: isNewKeyItem ? dungeon.keyItem : undefined,
+      })
     }
   }
 
@@ -330,7 +338,7 @@ function App() {
       </nav>
 
       {screen === 'fight' && !selectedFoeKey && !activeDungeon && (
-        <div className="mx-auto flex max-w-375 flex-col items-center gap-8">
+        <div className="mx-auto flex max-w-375 flex-col items-stretch gap-8">
           <div className="flex flex-wrap items-stretch justify-center gap-6">
             {DUNGEONS.map((dungeon) => (
               <DungeonCard
@@ -338,6 +346,7 @@ function App() {
                 dungeon={dungeon}
                 onStart={() => handleStartDungeon(dungeon)}
                 disabled={isPlayerDefeated}
+                cleared={keyItemKeys.includes(dungeon.keyItem.key)}
               />
             ))}
           </div>
@@ -384,6 +393,17 @@ function App() {
                   </div>
                 ) : null
               })()}
+            </div>
+          )}
+          {treasureReward?.keyItem && (
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Key Item
+              </div>
+              <div className="flex items-center gap-1 font-mono text-sm font-bold">
+                <Key className="size-4" />
+                {treasureReward.keyItem.name}
+              </div>
             </div>
           )}
           <div className="flex gap-2">
@@ -558,6 +578,7 @@ function App() {
             stats={player.stats}
             powerLevel={player.powerLevel}
             inventory={player.inventory}
+            keyItems={KEY_ITEMS.filter((item) => keyItemKeys.includes(item.key))}
           />
         </div>
       )}

@@ -18,5 +18,11 @@ const initialMetaStats: MetaStatValues = Object.fromEntries(META_STATS.map((s) =
 
 export function useMetaStats() {
   const [metaStats, setMetaStats] = useState<MetaStatValues>(initialMetaStats)
-  return { metaStats, setMetaStats }
+  const [keyItemKeys, setKeyItemKeys] = useState<string[]>([])
+
+  function addKeyItem(key: string) {
+    setKeyItemKeys((prev) => (prev.includes(key) ? prev : [...prev, key]))
+  }
+
+  return { metaStats, setMetaStats, keyItemKeys, addKeyItem }
 }

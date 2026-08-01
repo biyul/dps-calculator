@@ -5,13 +5,14 @@ interface DungeonCardProps {
   dungeon: Dungeon
   onStart: () => void
   disabled?: boolean
+  cleared?: boolean
 }
 
-export default function DungeonCard({ dungeon, onStart, disabled }: DungeonCardProps) {
+export default function DungeonCard({ dungeon, onStart, disabled, cleared }: DungeonCardProps) {
   const treasureCount = dungeon.stages.filter((stage) => stage.type === 'treasure').length
 
   return (
-    <div className="flex w-full max-w-sm flex-col rounded-lg border p-4">
+    <div className="flex w-full max-w-md flex-col rounded-lg border p-4">
       <h3 className="pb-3 text-center text-lg font-semibold">{dungeon.name}</h3>
 
       <table className="mb-4 w-full text-sm">
@@ -49,9 +50,12 @@ export default function DungeonCard({ dungeon, onStart, disabled }: DungeonCardP
         </tbody>
       </table>
 
-      <Button type="button" onClick={onStart} disabled={disabled} className="mt-auto">
-        Start
-      </Button>
+      <div className="mt-auto flex flex-col items-center gap-1">
+        {cleared && <div className="text-xs font-bold tracking-wide text-green-600">CLEARED</div>}
+        <Button type="button" onClick={onStart} disabled={disabled} className="w-full">
+          Start
+        </Button>
+      </div>
     </div>
   )
 }
