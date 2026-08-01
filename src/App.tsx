@@ -23,7 +23,7 @@ import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
 import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import FoeCard from './components/FoeCard.tsx'
 import DungeonCard from './components/DungeonCard.tsx'
-import InnCard from './components/InnCard.tsx'
+import TownBuildingCard from './components/TownBuildingCard.tsx'
 import LevelUpCard from './components/LevelUpCard.tsx'
 import EventLog from './components/EventLog.tsx'
 import EventColumns from './components/EventColumns.tsx'
@@ -517,12 +517,28 @@ function App() {
       {screen === 'town' && (
         <div className="mx-auto flex max-w-375 flex-col items-center gap-6">
           <div className="flex flex-wrap items-stretch justify-center gap-6">
-            <InnCard
-              onRest={handleRest}
-              restDisabled={playerCurrentHp >= playerMaxHp}
-              onToggleLevelUp={() => setShowLevelUp((v) => !v)}
-              levelUpActive={showLevelUp}
-            />
+            <TownBuildingCard name="Inn" locked={false} description="Rest here to fully recover your HP.">
+              <Button
+                type="button"
+                onClick={handleRest}
+                disabled={playerCurrentHp >= playerMaxHp}
+                className="w-full"
+              >
+                Rest
+              </Button>
+              <Button
+                type="button"
+                variant={showLevelUp ? 'default' : 'outline'}
+                onClick={() => setShowLevelUp((v) => !v)}
+                className="w-full"
+              >
+                Level Up
+              </Button>
+            </TownBuildingCard>
+            <TownBuildingCard name="Town Hall" />
+            <TownBuildingCard name="Market" />
+            <TownBuildingCard name="Academy" />
+            <TownBuildingCard name="Blacksmith" />
           </div>
           {showLevelUp && (
             <LevelUpCard
