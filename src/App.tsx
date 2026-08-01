@@ -4,6 +4,7 @@ import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
 import { getEquipmentPiece, getEquipmentTotal, type InventoryItem } from './equipment.ts'
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
+import { DUNGEONS, type Dungeon } from './dungeons.ts'
 import {
   buildTimeline,
   getFinalHp,
@@ -21,11 +22,13 @@ import CombatantStatsPanel from './components/CombatantStatsPanel.tsx'
 import CombatantAbilitiesPanel from './components/CombatantAbilitiesPanel.tsx'
 import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import FoeCard from './components/FoeCard.tsx'
+import DungeonCard from './components/DungeonCard.tsx'
 import InnCard from './components/InnCard.tsx'
 import LevelUpCard from './components/LevelUpCard.tsx'
 import EventLog from './components/EventLog.tsx'
 import EventColumns from './components/EventColumns.tsx'
 import { Button } from '@/components/ui/button'
+import { Stepper } from '@/components/ui/stepper'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Toggle } from '@/components/ui/toggle'
@@ -65,7 +68,12 @@ type LogView = 'log' | 'columns'
 interface FightEarnings {
   xp: number
   gold: number
-  item?: InventoryItem
+}
+
+interface TreasureReward {
+  xp: number
+  gold: number
+  item: InventoryItem
 }
 
 const NAV_ITEMS: { key: Screen; label: string }[] = [
@@ -77,7 +85,8 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
 ]
 
 function App() {
-  const player = useCombatantStats({ coreStatsBase: 10 })
+  // DEV: Strength starts at 90 for testing.
+  const player = useCombatantStats({ coreStatsBase: 10, initialStats: { strength: 90 } })
   const foe = useCombatantStats()
   const { metaStats, setMetaStats } = useMetaStats()
   const [screen, setScreen] = useState<Screen>('fight')
@@ -89,10 +98,22 @@ function App() {
   const [earnings, setEarnings] = useState<FightEarnings | null>(null)
   const [playerHp, setPlayerHp] = useState<number | null>(null)
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
+  const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
+  const [treasureReward, setTreasureReward] = useState<TreasureReward | null>(null)
 
   const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
   const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
   const isPlayerDefeated = playerCurrentHp <= 0
+
+  const activeDungeon = activeDungeonKey ? DUNGEONS.find((d) => d.key === activeDungeonKey) : undefined
+  const activeDungeonStage = activeDungeon?.stages[dungeonStageIndex]
+  const isTreasureStage = activeDungeon !== undefined && activeDungeonStage?.type === 'treasure'
+  const dungeonStepperSteps =
+    activeDungeon?.stages.map((stage, index) => ({
+      key: `${stage.type}-${index}`,
+      label: stage.type === 'treasure' ? 'Treasure' : 'Fight',
+    })) ?? []
 
   function runSimulation(foeStats: StatValues = foe.stats) {
     setTimeline(
@@ -126,6 +147,51 @@ function App() {
     })
     setSelectedFoeKey(preset.key)
     runSimulation(newFoeStats)
+  }
+
+  function enterDungeonStage(dungeon: Dungeon, stageIndex: number) {
+    const stage = dungeon.stages[stageIndex]
+    if (stage?.type === 'fight') {
+      const preset = FOE_PRESETS.find((p) => p.key === stage.foeKey)
+      if (preset) handleFight(preset)
+    } else if (stage?.type === 'treasure') {
+      const item = player.addRandomEquipment()
+      setMetaStats((prev) => ({
+        ...prev,
+        xp: prev.xp + dungeon.reward.xp,
+        gold: prev.gold + dungeon.reward.gold,
+      }))
+      setTreasureReward({ xp: dungeon.reward.xp, gold: dungeon.reward.gold, item })
+    }
+  }
+
+  function handleStartDungeon(dungeon: Dungeon) {
+    if (isPlayerDefeated) return
+    setActiveDungeonKey(dungeon.key)
+    setDungeonStageIndex(0)
+    setTreasureReward(null)
+    enterDungeonStage(dungeon, 0)
+  }
+
+  function handleDungeonContinue() {
+    if (!activeDungeon) return
+    const nextIndex = dungeonStageIndex + 1
+    const nextStage = activeDungeon.stages[nextIndex]
+    if (!nextStage) {
+      handleDungeonExit()
+      return
+    }
+    setDungeonStageIndex(nextIndex)
+    enterDungeonStage(activeDungeon, nextIndex)
+  }
+
+  function handleDungeonExit() {
+    setActiveDungeonKey(null)
+    setDungeonStageIndex(0)
+    setSelectedFoeKey(null)
+    setTimeline([])
+    setEarnings(null)
+    setTreasureReward(null)
   }
 
   function handleRest() {
@@ -174,9 +240,7 @@ function App() {
       gold: prev.gold + goldEarned,
     }))
 
-    const itemDropped = won ? player.addRandomEquipment() : undefined
-
-    setEarnings({ xp: xpEarned, gold: goldEarned, item: itemDropped })
+    setEarnings({ xp: xpEarned, gold: goldEarned })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeline])
 
@@ -265,20 +329,70 @@ function App() {
         ))}
       </nav>
 
-      {screen === 'fight' && !selectedFoeKey && (
-        <div className="mx-auto flex max-w-375 flex-wrap items-stretch justify-center gap-6">
-          {FOE_PRESETS.map((preset) => (
-            <FoeCard
-              key={preset.key}
-              preset={preset}
-              onFight={() => handleFight(preset)}
-              disabled={isPlayerDefeated}
-            />
-          ))}
+      {screen === 'fight' && !selectedFoeKey && !activeDungeon && (
+        <div className="mx-auto flex max-w-375 flex-col items-center gap-8">
+          <div className="flex flex-wrap items-stretch justify-center gap-6">
+            {DUNGEONS.map((dungeon) => (
+              <DungeonCard
+                key={dungeon.key}
+                dungeon={dungeon}
+                onStart={() => handleStartDungeon(dungeon)}
+                disabled={isPlayerDefeated}
+              />
+            ))}
+          </div>
+          <div className="flex flex-wrap items-stretch justify-center gap-6">
+            {FOE_PRESETS.map((preset) => (
+              <FoeCard
+                key={preset.key}
+                preset={preset}
+                onFight={() => handleFight(preset)}
+                disabled={isPlayerDefeated}
+              />
+            ))}
+          </div>
         </div>
       )}
 
-      {screen === 'fight' && selectedFoeKey && (
+      {screen === 'fight' && isTreasureStage && (
+        <div className="mx-auto flex max-w-md flex-col items-center gap-4 py-12">
+          <Stepper steps={dungeonStepperSteps} currentStep={dungeonStageIndex} className="mb-4" />
+          <div className="text-xl font-semibold">Yay! Treasure!</div>
+          {treasureReward && (
+            <div className="flex flex-col items-center gap-1">
+              <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+                Spoils
+              </div>
+              <div className="flex gap-4 font-mono text-sm">
+                <span>
+                  <span className="text-muted-foreground">XP </span>
+                  <span className="font-bold text-green-600">+{treasureReward.xp}</span>
+                </span>
+                <span>
+                  <span className="text-muted-foreground">Gold </span>
+                  <span className="font-bold text-green-600">+{treasureReward.gold}</span>
+                </span>
+              </div>
+              {(() => {
+                const droppedPiece = getEquipmentPiece(treasureReward.item.key)
+                return droppedPiece ? (
+                  <div className="font-mono text-sm">
+                    <span className="text-muted-foreground">Item </span>
+                    <span className="font-bold">
+                      {droppedPiece.label} ({droppedPiece.type}, Level {treasureReward.item.level})
+                    </span>
+                  </div>
+                ) : null
+              })()}
+            </div>
+          )}
+          <Button type="button" onClick={handleDungeonExit}>
+            Leave
+          </Button>
+        </div>
+      )}
+
+      {screen === 'fight' && selectedFoeKey && !isTreasureStage && (
         <div className={`mx-auto w-full ${logView === 'columns' ? 'max-w-4xl' : 'max-w-md'}`}>
           <div className="mb-2 flex flex-wrap items-center justify-center gap-3">
             <Button
@@ -286,12 +400,12 @@ function App() {
               variant="outline"
               size="icon-xs"
               aria-label="Back to foe list"
-              onClick={() => setSelectedFoeKey(null)}
+              onClick={() => (activeDungeon ? handleDungeonExit() : setSelectedFoeKey(null))}
             >
               <ArrowLeft />
             </Button>
             <div className="text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-              Simulation
+              {activeDungeon ? activeDungeon.name : 'Simulation'}
             </div>
             <Button
               type="button"
@@ -309,6 +423,11 @@ function App() {
               </Label>
               <Switch id="animate-log" checked={animateLog} onCheckedChange={setAnimateLog} />
             </div>
+            {activeDungeon && (
+              <div className="w-full max-w-xs">
+                <Stepper steps={dungeonStepperSteps} currentStep={dungeonStageIndex} />
+              </div>
+            )}
             <ToggleGroup
               value={[logView]}
               onValueChange={(values) => {
@@ -355,28 +474,33 @@ function App() {
                   <span className="font-bold text-green-600">+{earnings.gold}</span>
                 </span>
               </div>
-              {earnings.item &&
-                (() => {
-                  const droppedPiece = getEquipmentPiece(earnings.item.key)
-                  return droppedPiece ? (
-                    <div className="font-mono text-sm">
-                      <span className="text-muted-foreground">Item </span>
-                      <span className="font-bold">
-                        {droppedPiece.label} ({droppedPiece.type}, Level {earnings.item.level})
-                      </span>
-                    </div>
-                  ) : null
-                })()}
             </div>
           )}
 
           <div className="mt-4 flex justify-center gap-2">
-            <Button type="button" disabled={isPlayerDefeated} onClick={() => runSimulation()}>
-              Fight Again
-            </Button>
-            <Button type="button" variant="outline" onClick={() => setSelectedFoeKey(null)}>
-              Go Back to Listings
-            </Button>
+            {activeDungeon ? (
+              <>
+                {visibleVictoryEvent?.winnerLabel === 'Player' && (
+                  <Button type="button" onClick={handleDungeonContinue}>
+                    Continue
+                  </Button>
+                )}
+                {visibleVictoryEvent && (
+                  <Button type="button" variant="outline" onClick={handleDungeonExit}>
+                    Retreat
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <Button type="button" disabled={isPlayerDefeated} onClick={() => runSimulation()}>
+                  Fight Again
+                </Button>
+                <Button type="button" variant="outline" onClick={() => setSelectedFoeKey(null)}>
+                  Go Back to Listings
+                </Button>
+              </>
+            )}
           </div>
         </div>
       )}

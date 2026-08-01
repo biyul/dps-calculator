@@ -9,13 +9,16 @@ export type AbilityValues = Record<string, boolean>
 const initialAbilities: AbilityValues = Object.fromEntries(ABILITIES.map((a) => [a.key, false]))
 const initialAbilityOrder: string[] = ABILITIES.map((a) => a.key)
 
-export function useCombatantStats(options: { coreStatsBase?: number } = {}) {
-  const { coreStatsBase } = options
+export function useCombatantStats(
+  options: { coreStatsBase?: number; initialStats?: Partial<StatValues> } = {},
+) {
+  const { coreStatsBase, initialStats } = options
   const [stats, setStats] = useState<StatValues>(() =>
     Object.fromEntries(
       STATS.map((s) => [
         s.key,
-        coreStatsBase !== undefined && CORE_STATS.some((c) => c.key === s.key) ? coreStatsBase : s.min,
+        initialStats?.[s.key] ??
+          (coreStatsBase !== undefined && CORE_STATS.some((c) => c.key === s.key) ? coreStatsBase : s.min),
       ]),
     ),
   )
