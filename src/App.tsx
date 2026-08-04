@@ -2,7 +2,12 @@ import { useEffect, useState } from 'react'
 import { ArrowLeft, Key, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
 import { getCombatStat } from './combatStats.ts'
-import { getEquipmentPiece, getEquipmentTotal, type InventoryItem } from './equipment.ts'
+import {
+  createRandomEquipmentItem,
+  getEquipmentPiece,
+  getEquipmentTotal,
+  type InventoryItem,
+} from './equipment.ts'
 import { FOE_PRESETS, type FoePreset } from './foes.ts'
 import { DUNGEONS, KEY_ITEMS, type Dungeon, type KeyItem } from './dungeons.ts'
 import {
@@ -86,6 +91,9 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
   { key: 'equipment', label: 'Equipment' },
 ]
 
+const FORGE_COST_GOLD = 500
+const FORGE_DURATION_DAYS = 3
+
 function App() {
   // DEV: Strength starts at 90 for testing.
   const player = useCombatantStats({ coreStatsBase: 10, initialStats: { strength: 90 } })
@@ -106,6 +114,8 @@ function App() {
   const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
   const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
   const [treasureReward, setTreasureReward] = useState<TreasureReward | null>(null)
+  const [forgeDaysRemaining, setForgeDaysRemaining] = useState<number | null>(null)
+  const [blacksmithInventory, setBlacksmithInventory] = useState<InventoryItem[]>([])
 
   const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
   const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
@@ -119,6 +129,16 @@ function App() {
       key: `${stage.type}-${index}`,
       label: stage.type === 'treasure' ? 'Treasure' : 'Fight',
     })) ?? []
+
+  const canCollectForge = blacksmithInventory.length > 0
+  const isForging = !canCollectForge && forgeDaysRemaining !== null
+  const blacksmithLabel = canCollectForge
+    ? 'Collect All'
+    : isForging
+      ? `Forging... (${forgeDaysRemaining} day${forgeDaysRemaining === 1 ? '' : 's'})`
+      : 'Forge'
+  const blacksmithDisabled =
+    inDungeon || isForging || (!canCollectForge && metaStats.gold < FORGE_COST_GOLD)
 
   function runSimulation(foeStats: StatValues = foe.stats) {
     setTimeline(
@@ -154,10 +174,35 @@ function App() {
     runSimulation(newFoeStats)
   }
 
+  function advanceDay() {
+    setDays((prev) => prev + 1)
+    if (forgeDaysRemaining !== null) {
+      const next = forgeDaysRemaining - 1
+      if (next <= 0) {
+        setForgeDaysRemaining(null)
+        setBlacksmithInventory((items) => [...items, createRandomEquipmentItem()])
+      } else {
+        setForgeDaysRemaining(next)
+      }
+    }
+  }
+
+  function handleForge() {
+    if (inDungeon || forgeDaysRemaining !== null || blacksmithInventory.length > 0) return
+    if (metaStats.gold < FORGE_COST_GOLD) return
+    setMetaStats((prev) => ({ ...prev, gold: prev.gold - FORGE_COST_GOLD }))
+    setForgeDaysRemaining(FORGE_DURATION_DAYS)
+  }
+
+  function handleCollectForge() {
+    player.addItems(blacksmithInventory)
+    setBlacksmithInventory([])
+  }
+
   function enterDungeonStage(dungeon: Dungeon, stageIndex: number) {
     const stage = dungeon.stages[stageIndex]
     if (stageIndex === dungeon.stages.length - 1) {
-      setDays((prev) => prev + 1)
+      advanceDay()
       setInDungeon(false)
     }
     if (stage?.type === 'fight') {
@@ -214,7 +259,7 @@ function App() {
 
   function handleRest() {
     setPlayerHp(null)
-    setDays((prev) => prev + 1)
+    advanceDay()
   }
 
   function handleLevelUp(pending: Record<string, number>) {
@@ -591,7 +636,20 @@ function App() {
             <TownBuildingCard name="Town Hall" disabled={inDungeon} />
             <TownBuildingCard name="Market" disabled={inDungeon} />
             <TownBuildingCard name="Academy" disabled={inDungeon} />
-            <TownBuildingCard name="Blacksmith" disabled={inDungeon} />
+            <TownBuildingCard
+              name="Blacksmith"
+              locked={false}
+              description={`Forge a random item for ${FORGE_COST_GOLD} gold. Takes ${FORGE_DURATION_DAYS} days.`}
+            >
+              <Button
+                type="button"
+                onClick={canCollectForge ? handleCollectForge : handleForge}
+                disabled={blacksmithDisabled}
+                className="w-full"
+              >
+                {blacksmithLabel}
+              </Button>
+            </TownBuildingCard>
           </div>
           {showLevelUp && (
             <LevelUpCard

@@ -1,13 +1,7 @@
 import { useMemo, useState } from 'react'
 import { STATS, CORE_STATS, type Stat } from './stats.ts'
 import { ABILITIES } from './abilities.ts'
-import {
-  EQUIPMENT,
-  getEquipmentPiece,
-  randomEquipmentLevel,
-  rollItemMods,
-  type InventoryItem,
-} from './equipment.ts'
+import { createRandomEquipmentItem, getEquipmentPiece, type InventoryItem } from './equipment.ts'
 
 export type StatValues = Record<string, number>
 export type AbilityValues = Record<string, boolean>
@@ -64,16 +58,13 @@ export function useCombatantStats(
   }
 
   function addRandomEquipment(): InventoryItem {
-    const picked = EQUIPMENT[Math.floor(Math.random() * EQUIPMENT.length)]
-    const item: InventoryItem = {
-      id: crypto.randomUUID(),
-      key: picked.key,
-      level: randomEquipmentLevel(),
-      equipped: false,
-      mods: rollItemMods(),
-    }
+    const item = createRandomEquipmentItem()
     setInventory((prev) => [...prev, item])
     return item
+  }
+
+  function addItems(items: InventoryItem[]) {
+    setInventory((prev) => [...prev, ...items])
   }
 
   function sellEquipment(id: string) {
@@ -113,6 +104,7 @@ export function useCombatantStats(
     reorderAbilities,
     inventory,
     addRandomEquipment,
+    addItems,
     sellEquipment,
     sellAllEquipment,
     toggleEquip,

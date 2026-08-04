@@ -138,6 +138,20 @@ export function getEquipmentPiece(key: string): EquipmentPiece | undefined {
   return EQUIPMENT.find((item) => item.key === key)
 }
 
+// Rolls a brand new random item instance (random piece, level, and mods) without
+// adding it to anyone's inventory, so callers can hold onto it first (e.g. the
+// Blacksmith storing a forged item until it's collected).
+export function createRandomEquipmentItem(): InventoryItem {
+  const picked = EQUIPMENT[Math.floor(Math.random() * EQUIPMENT.length)]
+  return {
+    id: crypto.randomUUID(),
+    key: picked.key,
+    level: randomEquipmentLevel(),
+    equipped: false,
+    mods: rollItemMods(),
+  }
+}
+
 export function getEquipmentTotal(
   inventory: InventoryItem[],
   field: LeveledStatField | 'speed',
