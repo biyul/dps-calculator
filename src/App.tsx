@@ -99,6 +99,7 @@ function App() {
   const [earnings, setEarnings] = useState<FightEarnings | null>(null)
   const [playerHp, setPlayerHp] = useState<number | null>(null)
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [days, setDays] = useState(1)
   const [debugMode, setDebugMode] = useState(false)
   const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
   const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
@@ -153,6 +154,9 @@ function App() {
 
   function enterDungeonStage(dungeon: Dungeon, stageIndex: number) {
     const stage = dungeon.stages[stageIndex]
+    if (stageIndex === dungeon.stages.length - 1) {
+      setDays((prev) => prev + 1)
+    }
     if (stage?.type === 'fight') {
       const preset = FOE_PRESETS.find((p) => p.key === stage.foeKey)
       if (preset) handleFight(preset)
@@ -205,6 +209,7 @@ function App() {
 
   function handleRest() {
     setPlayerHp(null)
+    setDays((prev) => prev + 1)
   }
 
   function handleLevelUp(pending: Record<string, number>) {
@@ -304,12 +309,18 @@ function App() {
           DPS Calculator
         </h1>
 
-        <div className="absolute top-1/2 left-0 -translate-y-1/2 text-center">
-          <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-            Player HP
+        <div className="absolute top-1/2 left-0 flex -translate-y-1/2 gap-4">
+          <div className="text-center">
+            <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">Days</div>
+            <div className="text-lg font-bold tabular-nums">{days}</div>
           </div>
-          <div className={`text-lg font-bold tabular-nums ${isPlayerDefeated ? 'text-red-600' : ''}`}>
-            {playerCurrentHp} / {playerMaxHp}
+          <div className="text-center">
+            <div className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Player HP
+            </div>
+            <div className={`text-lg font-bold tabular-nums ${isPlayerDefeated ? 'text-red-600' : ''}`}>
+              {playerCurrentHp} / {playerMaxHp}
+            </div>
           </div>
         </div>
 
