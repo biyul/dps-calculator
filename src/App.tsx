@@ -110,7 +110,7 @@ function App() {
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [days, setDays] = useState(1)
   const [inDungeon, setInDungeon] = useState(false)
-  const [debugMode, setDebugMode] = useState(false)
+  const [debugMode, setDebugMode] = useState(true)
   const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
   const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
   const [treasureReward, setTreasureReward] = useState<TreasureReward | null>(null)

@@ -1,4 +1,5 @@
 import { getLeveledStat, getModDef, MAX_ITEM_MODS, type EquipmentPiece, type ItemMod } from '../equipment.ts'
+import EquipmentIcon from './EquipmentIcon.tsx'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 
@@ -37,6 +38,7 @@ export default function EquipmentItem({
 }: EquipmentItemProps) {
   return (
     <Card className="w-44 shrink-0 text-sm">
+      <EquipmentIcon slot={piece.slot} type={piece.type} level={level} />
       <div className="text-center">
         <div className="font-semibold">{piece.label}</div>
         <div className="text-[10px] text-muted-foreground">Level {level}</div>

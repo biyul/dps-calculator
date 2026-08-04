@@ -42,6 +42,14 @@ export default function CombatantEquipmentPanel({
             Equipment
           </div>
 
+          {debug && (
+            <div className="mb-4 flex justify-center">
+              <Button type="button" size="xs" onClick={onAddEquipment}>
+                Random Drop
+              </Button>
+            </div>
+          )}
+
           <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             Equipped
           </div>
