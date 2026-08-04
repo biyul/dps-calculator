@@ -132,6 +132,7 @@ export interface InventoryItem {
   level: number
   equipped: boolean
   mods: ItemMod[]
+  seen: boolean
 }
 
 export function getEquipmentPiece(key: string): EquipmentPiece | undefined {
@@ -149,6 +150,7 @@ export function createRandomEquipmentItem(): InventoryItem {
     level: randomEquipmentLevel(),
     equipped: false,
     mods: rollItemMods(),
+    seen: false,
   }
 }
 

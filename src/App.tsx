@@ -120,6 +120,7 @@ function App() {
   const [forgeDaysRemaining, setForgeDaysRemaining] = useState<number | null>(null)
   const [blacksmithInventory, setBlacksmithInventory] = useState<InventoryItem[]>([])
   const [wellRestedDaysRemaining, setWellRestedDaysRemaining] = useState<number | null>(null)
+  const [highlightedItemIds, setHighlightedItemIds] = useState<Set<string>>(new Set())
 
   const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
   const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
@@ -129,6 +130,14 @@ function App() {
     xpGain: wellRestedDaysRemaining !== null ? WELL_RESTED_XP_GAIN_BONUS : 0,
   }
   const xpGainMultiplier = getCombatStat('xpGain', player.stats, player.inventory, playerBuffs) / 100
+
+  useEffect(() => {
+    if (screen !== 'equipment') return
+    const unseenIds = player.inventory.filter((item) => !item.seen).map((item) => item.id)
+    setHighlightedItemIds(new Set(unseenIds))
+    if (unseenIds.length > 0) player.markItemsSeen(unseenIds)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screen])
 
   const activeDungeon = activeDungeonKey ? DUNGEONS.find((d) => d.key === activeDungeonKey) : undefined
   const activeDungeonStage = activeDungeon?.stages[dungeonStageIndex]
@@ -722,6 +731,7 @@ function App() {
             onSellAllEquipment={player.sellAllEquipment}
             onToggleEquip={player.toggleEquip}
             debug={debugMode}
+            highlightedItemIds={highlightedItemIds}
           />
         </div>
       )}

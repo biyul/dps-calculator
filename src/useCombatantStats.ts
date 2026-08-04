@@ -67,6 +67,10 @@ export function useCombatantStats(
     setInventory((prev) => [...prev, ...items])
   }
 
+  function markItemsSeen(ids: string[]) {
+    setInventory((prev) => prev.map((item) => (ids.includes(item.id) ? { ...item, seen: true } : item)))
+  }
+
   function sellEquipment(id: string) {
     setInventory((prev) => prev.filter((item) => item.id !== id))
   }
@@ -105,6 +109,7 @@ export function useCombatantStats(
     inventory,
     addRandomEquipment,
     addItems,
+    markItemsSeen,
     sellEquipment,
     sellAllEquipment,
     toggleEquip,

@@ -18,6 +18,7 @@ interface CombatantEquipmentPanelProps {
   onSellAllEquipment?: () => void
   onToggleEquip?: (id: string) => void
   debug?: boolean
+  highlightedItemIds?: Set<string>
 }
 
 export default function CombatantEquipmentPanel({
@@ -31,6 +32,7 @@ export default function CombatantEquipmentPanel({
   onSellAllEquipment,
   onToggleEquip,
   debug,
+  highlightedItemIds,
 }: CombatantEquipmentPanelProps) {
   return (
     <div className="flex w-full max-w-5xl flex-col">
@@ -71,6 +73,7 @@ export default function CombatantEquipmentPanel({
                       mods={equippedItem.mods}
                       equipped
                       debug={debug}
+                      highlighted={highlightedItemIds?.has(equippedItem.id)}
                       onSell={() => onSellEquipment(equippedItem.id)}
                       onToggleEquip={() => onToggleEquip(equippedItem.id)}
                     />
@@ -109,6 +112,7 @@ export default function CombatantEquipmentPanel({
                     mods={item.mods}
                     equipped={false}
                     debug={debug}
+                    highlighted={highlightedItemIds?.has(item.id)}
                     onSell={() => onSellEquipment(item.id)}
                     onToggleEquip={() => onToggleEquip(item.id)}
                   />

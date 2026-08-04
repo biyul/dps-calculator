@@ -2,6 +2,7 @@ import { getLeveledStat, getModDef, MAX_ITEM_MODS, type EquipmentPiece, type Ite
 import EquipmentIcon from './EquipmentIcon.tsx'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import { cn } from '@/lib/utils'
 
 interface EquipmentItemProps {
   piece: EquipmentPiece
@@ -9,6 +10,7 @@ interface EquipmentItemProps {
   mods: ItemMod[]
   equipped: boolean
   debug?: boolean
+  highlighted?: boolean
   onSell: () => void
   onToggleEquip: () => void
 }
@@ -33,11 +35,12 @@ export default function EquipmentItem({
   mods,
   equipped,
   debug,
+  highlighted,
   onSell,
   onToggleEquip,
 }: EquipmentItemProps) {
   return (
-    <Card className="w-44 shrink-0 text-sm">
+    <Card className={cn('w-44 shrink-0 text-sm', highlighted && 'border-2 border-foreground')}>
       <EquipmentIcon slot={piece.slot} type={piece.type} level={level} />
       <div className="text-center">
         <div className="font-semibold">{piece.label}</div>
