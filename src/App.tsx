@@ -29,6 +29,7 @@ import CombatantEquipmentPanel from './components/CombatantEquipmentPanel.tsx'
 import FoeCard from './components/FoeCard.tsx'
 import DungeonCard from './components/DungeonCard.tsx'
 import TownBuildingCard from './components/TownBuildingCard.tsx'
+import EquipmentIcon from './components/EquipmentIcon.tsx'
 import LevelUpCard from './components/LevelUpCard.tsx'
 import EventLog from './components/EventLog.tsx'
 import EventColumns from './components/EventColumns.tsx'
@@ -93,6 +94,7 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
 
 const FORGE_COST_GOLD = 500
 const FORGE_DURATION_DAYS = 3
+const BLACKSMITH_SLOT_COUNT = 1
 
 const WELL_RESTED_DURATION_DAYS = 3
 const WELL_RESTED_XP_GAIN_BONUS = 25
@@ -667,11 +669,30 @@ function App() {
             <TownBuildingCard name="Town Hall" disabled={inDungeon} />
             <TownBuildingCard name="Market" disabled={inDungeon} />
             <TownBuildingCard name="Academy" disabled={inDungeon} />
-            <TownBuildingCard
-              name="Blacksmith"
-              locked={false}
-              description={`Forge a random item for ${FORGE_COST_GOLD} gold. Takes ${FORGE_DURATION_DAYS} days.`}
-            >
+            <TownBuildingCard name="Blacksmith" locked={false} description="Forge a random item">
+              <div className="flex justify-center gap-2">
+                {Array.from({ length: BLACKSMITH_SLOT_COUNT }, (_, i) => {
+                  const item = blacksmithInventory[i]
+                  const piece = item ? getEquipmentPiece(item.key) : undefined
+                  return piece && item ? (
+                    <EquipmentIcon key={item.id} slot={piece.slot} type={piece.type} level={item.level} />
+                  ) : (
+                    <EquipmentIcon key={i} empty />
+                  )
+                })}
+              </div>
+              <table className="w-full text-sm">
+                <tbody className="divide-y">
+                  <tr>
+                    <td className="py-1 text-left font-semibold">Gold</td>
+                    <td className="py-1 text-right tabular-nums">{FORGE_COST_GOLD}</td>
+                  </tr>
+                  <tr>
+                    <td className="py-1 text-left font-semibold">Days</td>
+                    <td className="py-1 text-right tabular-nums">{FORGE_DURATION_DAYS}</td>
+                  </tr>
+                </tbody>
+              </table>
               <Button
                 type="button"
                 onClick={canCollectForge ? handleCollectForge : handleForge}

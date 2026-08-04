@@ -1,11 +1,9 @@
-import { GitCommitHorizontal, Hand, HardHat, Shirt, SportShoe } from 'lucide-react'
+import { GitCommitHorizontal, Hand, HardHat, Shirt, Slash, SportShoe } from 'lucide-react'
 import type { EquipmentSlot, EquipmentType } from '../equipment.ts'
 
-interface EquipmentIconProps {
-  slot: EquipmentSlot
-  type: EquipmentType
-  level: number
-}
+type EquipmentIconProps =
+  | { empty: true }
+  | { empty?: false; slot: EquipmentSlot; type: EquipmentType; level: number }
 
 const TYPE_LETTER: Record<EquipmentType, string> = {
   Light: 'L',
@@ -21,7 +19,18 @@ const SLOT_ICON: Record<EquipmentSlot, typeof Shirt> = {
   legs: SportShoe,
 }
 
-export default function EquipmentIcon({ slot, type, level }: EquipmentIconProps) {
+export default function EquipmentIcon(props: EquipmentIconProps) {
+  if (props.empty) {
+    return (
+      <div className="relative mx-auto size-14">
+        <div className="flex size-full items-center justify-center rounded-full border bg-muted">
+          <Slash className="size-6 text-muted-foreground" />
+        </div>
+      </div>
+    )
+  }
+
+  const { slot, type, level } = props
   const Icon = SLOT_ICON[slot]
   return (
     <div className="relative mx-auto size-14">
