@@ -115,7 +115,6 @@ function App() {
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [days, setDays] = useState(1)
   const [inDungeon, setInDungeon] = useState(false)
-  const [debugMode, setDebugMode] = useState(true)
   const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
   const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
   const [treasureReward, setTreasureReward] = useState<TreasureReward | null>(null)
@@ -123,6 +122,7 @@ function App() {
   const [blacksmithInventory, setBlacksmithInventory] = useState<InventoryItem[]>([])
   const [wellRestedDaysRemaining, setWellRestedDaysRemaining] = useState<number | null>(null)
   const [highlightedItemIds, setHighlightedItemIds] = useState<Set<string>>(new Set())
+  const [debugMode, setDebugMode] = useState(true)
 
   const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
   const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
@@ -288,6 +288,22 @@ function App() {
     setWellRestedDaysRemaining(WELL_RESTED_DURATION_DAYS)
   }
 
+  function handleDebugAddGold() {
+    setMetaStats((prev) => ({ ...prev, gold: prev.gold + 10000 }))
+  }
+
+  function handleDebugAddXp() {
+    setMetaStats((prev) => ({ ...prev, xp: prev.xp + 10000 }))
+  }
+
+  function handleDebugHealHp() {
+    setPlayerHp(null)
+  }
+
+  function handleDebugHurtHp() {
+    setPlayerHp(0)
+  }
+
   function handleLevelUp(pending: Record<string, number>) {
     const totalIncrements = Object.values(pending).reduce((sum, count) => sum + count, 0)
     if (totalIncrements === 0) return
@@ -416,16 +432,10 @@ function App() {
               <div className="text-lg font-bold tabular-nums">{metaStats[stat.key]}</div>
             </div>
           ))}
-          <div className="flex items-center gap-1.5">
-            <Label htmlFor="debug-mode" className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
-              Debug
-            </Label>
-            <Switch id="debug-mode" checked={debugMode} onCheckedChange={setDebugMode} />
-          </div>
         </div>
       </div>
 
-      <nav className="mb-8 flex justify-center gap-2">
+      <nav className="mb-2 flex justify-center gap-2">
         {NAV_ITEMS.map((item) => (
           <div key={item.key} className="relative">
             <Button
@@ -441,6 +451,35 @@ function App() {
           </div>
         ))}
       </nav>
+
+      <div className="mx-auto mb-8 flex max-w-375 flex-col items-center gap-4 border-b pb-6">
+        <div className="flex items-center gap-1.5">
+          <Label htmlFor="debug-mode" className="text-xs text-muted-foreground">
+            Show Equipment Ranges
+          </Label>
+          <Switch id="debug-mode" checked={debugMode} onCheckedChange={setDebugMode} />
+        </div>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <Button type="button" onClick={handleDebugAddGold}>
+            Add Gold
+          </Button>
+          <Button type="button" onClick={handleDebugAddXp}>
+            Add XP
+          </Button>
+          <Button type="button" onClick={handleDebugHealHp}>
+            Heal HP
+          </Button>
+          <Button type="button" onClick={handleDebugHurtHp}>
+            Hurt HP
+          </Button>
+          <Button type="button" onClick={player.addRandomEquipment}>
+            Random Drop
+          </Button>
+          <Button type="button" onClick={advanceDay}>
+            Pass 1 Day
+          </Button>
+        </div>
+      </div>
 
       {screen === 'fight' && !selectedFoeKey && !activeDungeon && (
         <div className="mx-auto flex max-w-375 flex-col items-stretch gap-8">
@@ -747,15 +786,15 @@ function App() {
             onUpdateStat={player.updateStat}
             onSetAll={player.setAllStats}
             inventory={player.inventory}
-            onAddEquipment={player.addRandomEquipment}
             onSellEquipment={player.sellEquipment}
             onSellAllEquipment={player.sellAllEquipment}
             onToggleEquip={player.toggleEquip}
-            debug={debugMode}
             highlightedItemIds={highlightedItemIds}
+            debug={debugMode}
           />
         </div>
       )}
+
     </div>
   )
 }

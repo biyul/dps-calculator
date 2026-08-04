@@ -51,7 +51,6 @@ export default function EquipmentItem({
         <tbody className="divide-y">
           {STAT_FIELDS.map(({ key, label, unit }) => {
             const value = key === 'speed' ? piece.speed : getLeveledStat(piece, level, key)
-            const showBase = debug
             return (
               <tr key={key}>
                 <td className="py-0.5 text-muted-foreground">{label}</td>
@@ -61,7 +60,7 @@ export default function EquipmentItem({
                     {value}
                     {unit ?? ''}
                   </div>
-                  {showBase && (
+                  {debug && (
                     <div className="text-[10px] font-normal text-muted-foreground">
                       Base: {piece[key]}
                       {unit ?? ''}
@@ -81,7 +80,6 @@ export default function EquipmentItem({
           {Array.from({ length: MAX_ITEM_MODS }, (_, i) => {
             const mod = mods[i]
             const modDef = mod ? getModDef(mod.key) : undefined
-            const showRange = debug && modDef
             return (
               <tr key={i}>
                 {mod && modDef ? (
@@ -92,7 +90,7 @@ export default function EquipmentItem({
                         +{mod.value}
                         {modDef.unit}
                       </div>
-                      {showRange && (
+                      {debug && (
                         <div className="text-[10px] font-normal text-muted-foreground">
                           Base: 1-{modDef.max}
                           {modDef.unit}

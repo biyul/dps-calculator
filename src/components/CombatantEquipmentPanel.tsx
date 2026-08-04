@@ -13,12 +13,11 @@ interface CombatantEquipmentPanelProps {
   onUpdateStat: (key: string, value: number) => void
   onSetAll: (mode: 'min' | 'max', group?: Stat[]) => void
   inventory?: InventoryItem[]
-  onAddEquipment?: () => void
   onSellEquipment?: (id: string) => void
   onSellAllEquipment?: () => void
   onToggleEquip?: (id: string) => void
-  debug?: boolean
   highlightedItemIds?: Set<string>
+  debug?: boolean
 }
 
 export default function CombatantEquipmentPanel({
@@ -27,30 +26,21 @@ export default function CombatantEquipmentPanel({
   onUpdateStat,
   onSetAll,
   inventory,
-  onAddEquipment,
   onSellEquipment,
   onSellAllEquipment,
   onToggleEquip,
-  debug,
   highlightedItemIds,
+  debug,
 }: CombatantEquipmentPanelProps) {
   return (
     <div className="flex w-full max-w-5xl flex-col">
       <h2 className="pb-3 text-center text-lg font-semibold">{title}</h2>
 
-      {inventory && onAddEquipment && onSellEquipment && onSellAllEquipment && onToggleEquip && (
+      {inventory && onSellEquipment && onSellAllEquipment && onToggleEquip && (
         <>
           <div className="mb-2 text-center text-xs font-semibold tracking-wide text-muted-foreground uppercase">
             Equipment
           </div>
-
-          {debug && (
-            <div className="mb-4 flex justify-center">
-              <Button type="button" size="xs" onClick={onAddEquipment}>
-                Random Drop
-              </Button>
-            </div>
-          )}
 
           <div className="mb-1 text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
             Equipped
@@ -92,9 +82,6 @@ export default function CombatantEquipmentPanel({
             <div className="flex gap-1">
               <Button type="button" variant="outline" size="xs" onClick={onSellAllEquipment}>
                 Sell All
-              </Button>
-              <Button type="button" size="xs" onClick={onAddEquipment}>
-                Add
               </Button>
             </div>
           </div>
