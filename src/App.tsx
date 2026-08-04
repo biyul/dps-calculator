@@ -99,6 +99,7 @@ function App() {
   const [earnings, setEarnings] = useState<FightEarnings | null>(null)
   const [playerHp, setPlayerHp] = useState<number | null>(null)
   const [showLevelUp, setShowLevelUp] = useState(false)
+  const [debugMode, setDebugMode] = useState(false)
   const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
   const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
   const [treasureReward, setTreasureReward] = useState<TreasureReward | null>(null)
@@ -321,6 +322,12 @@ function App() {
               <div className="text-lg font-bold tabular-nums">{metaStats[stat.key]}</div>
             </div>
           ))}
+          <div className="flex items-center gap-1.5">
+            <Label htmlFor="debug-mode" className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+              Debug
+            </Label>
+            <Switch id="debug-mode" checked={debugMode} onCheckedChange={setDebugMode} />
+          </div>
         </div>
       </div>
 
@@ -607,6 +614,7 @@ function App() {
             onSellEquipment={player.sellEquipment}
             onSellAllEquipment={player.sellAllEquipment}
             onToggleEquip={player.toggleEquip}
+            debug={debugMode}
           />
         </div>
       )}

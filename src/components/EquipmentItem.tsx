@@ -7,6 +7,7 @@ interface EquipmentItemProps {
   level: number
   mods: ItemMod[]
   equipped: boolean
+  debug?: boolean
   onSell: () => void
   onToggleEquip: () => void
 }
@@ -25,7 +26,15 @@ function statColor(value: number) {
   return 'text-neutral-500'
 }
 
-export default function EquipmentItem({ piece, level, mods, equipped, onSell, onToggleEquip }: EquipmentItemProps) {
+export default function EquipmentItem({
+  piece,
+  level,
+  mods,
+  equipped,
+  debug,
+  onSell,
+  onToggleEquip,
+}: EquipmentItemProps) {
   return (
     <Card className="w-44 shrink-0 text-sm">
       <div className="text-center">
@@ -34,16 +43,25 @@ export default function EquipmentItem({ piece, level, mods, equipped, onSell, on
         <div className="text-[10px] text-muted-foreground uppercase">{piece.type}</div>
       </div>
       <table className="w-full text-xs">
-        <tbody>
+        <tbody className="divide-y">
           {STAT_FIELDS.map(({ key, label, unit }) => {
             const value = key === 'speed' ? piece.speed : getLeveledStat(piece, level, key)
+            const showBase = debug
             return (
-              <tr key={key} className="border-b last:border-b-0">
+              <tr key={key}>
                 <td className="py-0.5 text-muted-foreground">{label}</td>
-                <td className={`py-0.5 text-right font-bold tabular-nums ${statColor(value)}`}>
-                  {value > 0 ? '+' : ''}
-                  {value}
-                  {unit ?? ''}
+                <td className="py-0.5 text-right">
+                  <div className={`font-bold tabular-nums ${statColor(value)}`}>
+                    {value > 0 ? '+' : ''}
+                    {value}
+                    {unit ?? ''}
+                  </div>
+                  {showBase && (
+                    <div className="text-[10px] font-normal text-muted-foreground">
+                      Base: {piece[key]}
+                      {unit ?? ''}
+                    </div>
+                  )}
                 </td>
               </tr>
             )
@@ -54,18 +72,27 @@ export default function EquipmentItem({ piece, level, mods, equipped, onSell, on
         Mods
       </div>
       <table className="w-full text-xs">
-        <tbody>
+        <tbody className="divide-y">
           {Array.from({ length: MAX_ITEM_MODS }, (_, i) => {
             const mod = mods[i]
             const modDef = mod ? getModDef(mod.key) : undefined
+            const showRange = debug && modDef
             return (
-              <tr key={i} className="border-b last:border-b-0">
+              <tr key={i}>
                 {mod && modDef ? (
                   <>
                     <td className="py-0.5 text-muted-foreground">{modDef.label}</td>
-                    <td className="py-0.5 text-right font-bold tabular-nums text-green-600">
-                      +{mod.value}
-                      {modDef.unit}
+                    <td className="py-0.5 text-right">
+                      <div className="font-bold tabular-nums text-green-600">
+                        +{mod.value}
+                        {modDef.unit}
+                      </div>
+                      {showRange && (
+                        <div className="text-[10px] font-normal text-muted-foreground">
+                          Base: 1-{modDef.max}
+                          {modDef.unit}
+                        </div>
+                      )}
                     </td>
                   </>
                 ) : (
