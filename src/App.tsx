@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { ArrowLeft, Key, RotateCw } from 'lucide-react'
+import { ArrowLeft, Hourglass, Key, RotateCw } from 'lucide-react'
 import { getBaseStat } from './baseStats.ts'
-import { getCombatStat } from './combatStats.ts'
+import { getCombatStat, type BuffValues } from './combatStats.ts'
 import {
   createRandomEquipmentItem,
   getEquipmentPiece,
@@ -94,6 +94,9 @@ const NAV_ITEMS: { key: Screen; label: string }[] = [
 const FORGE_COST_GOLD = 500
 const FORGE_DURATION_DAYS = 3
 
+const WELL_RESTED_DURATION_DAYS = 3
+const WELL_RESTED_XP_GAIN_BONUS = 25
+
 function App() {
   // DEV: Strength starts at 90 for testing.
   const player = useCombatantStats({ coreStatsBase: 10, initialStats: { strength: 90 } })
@@ -116,10 +119,16 @@ function App() {
   const [treasureReward, setTreasureReward] = useState<TreasureReward | null>(null)
   const [forgeDaysRemaining, setForgeDaysRemaining] = useState<number | null>(null)
   const [blacksmithInventory, setBlacksmithInventory] = useState<InventoryItem[]>([])
+  const [wellRestedDaysRemaining, setWellRestedDaysRemaining] = useState<number | null>(null)
 
   const playerMaxHp = getCombatStat('hp', player.stats, player.inventory)
   const playerCurrentHp = Math.min(playerHp ?? playerMaxHp, playerMaxHp)
   const isPlayerDefeated = playerCurrentHp <= 0
+
+  const playerBuffs: BuffValues = {
+    xpGain: wellRestedDaysRemaining !== null ? WELL_RESTED_XP_GAIN_BONUS : 0,
+  }
+  const xpGainMultiplier = getCombatStat('xpGain', player.stats, player.inventory, playerBuffs) / 100
 
   const activeDungeon = activeDungeonKey ? DUNGEONS.find((d) => d.key === activeDungeonKey) : undefined
   const activeDungeonStage = activeDungeon?.stages[dungeonStageIndex]
@@ -185,6 +194,10 @@ function App() {
         setForgeDaysRemaining(next)
       }
     }
+    if (wellRestedDaysRemaining !== null) {
+      const next = wellRestedDaysRemaining - 1
+      setWellRestedDaysRemaining(next <= 0 ? null : next)
+    }
   }
 
   function handleForge() {
@@ -210,15 +223,16 @@ function App() {
       if (preset) handleFight(preset)
     } else if (stage?.type === 'treasure') {
       const item = player.addRandomEquipment()
+      const xpEarned = Math.round(dungeon.reward.xp * xpGainMultiplier)
       setMetaStats((prev) => ({
         ...prev,
-        xp: prev.xp + dungeon.reward.xp,
+        xp: prev.xp + xpEarned,
         gold: prev.gold + dungeon.reward.gold,
       }))
       const isNewKeyItem = !keyItemKeys.includes(dungeon.keyItem.key)
       if (isNewKeyItem) addKeyItem(dungeon.keyItem.key)
       setTreasureReward({
-        xp: dungeon.reward.xp,
+        xp: xpEarned,
         gold: dungeon.reward.gold,
         item,
         keyItem: isNewKeyItem ? dungeon.keyItem : undefined,
@@ -260,6 +274,7 @@ function App() {
   function handleRest() {
     setPlayerHp(null)
     advanceDay()
+    setWellRestedDaysRemaining(WELL_RESTED_DURATION_DAYS)
   }
 
   function handleLevelUp(pending: Record<string, number>) {
@@ -295,7 +310,7 @@ function App() {
     if (!preset) return
     const won = victoryEvent.winnerLabel === 'Player'
     const multiplier = won ? 1 : 0.1
-    const xpEarned = Math.round(preset.xpReward * multiplier)
+    const xpEarned = Math.round(preset.xpReward * multiplier * xpGainMultiplier)
     const goldEarned = Math.round(preset.goldReward * multiplier)
 
     setMetaStats((prev) => ({
@@ -372,6 +387,13 @@ function App() {
               {playerCurrentHp} / {playerMaxHp}
             </div>
           </div>
+          {wellRestedDaysRemaining !== null && (
+            <div className="flex items-center gap-1 self-center text-sm font-semibold text-blue-600">
+              Well Rested
+              <Hourglass className="size-4" />
+              {wellRestedDaysRemaining}
+            </div>
+          )}
         </div>
 
         <div className="absolute top-1/2 right-0 flex -translate-y-1/2 gap-4">
@@ -670,6 +692,7 @@ function App() {
             powerLevel={player.powerLevel}
             inventory={player.inventory}
             keyItems={KEY_ITEMS.filter((item) => keyItemKeys.includes(item.key))}
+            buffs={playerBuffs}
           />
         </div>
       )}

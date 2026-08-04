@@ -1,5 +1,5 @@
 import { Key } from 'lucide-react'
-import { COMBAT_STATS, getCombatStatBreakdown } from '../combatStats.ts'
+import { COMBAT_STATS, getCombatStatBreakdown, type BuffValues } from '../combatStats.ts'
 import { CORE_STATS } from '../stats.ts'
 import type { InventoryItem } from '../equipment.ts'
 import type { KeyItem } from '../dungeons.ts'
@@ -11,6 +11,7 @@ interface CombatantStatsPanelProps {
   powerLevel: number
   inventory?: InventoryItem[]
   keyItems?: KeyItem[]
+  buffs?: BuffValues
 }
 
 function formatValue(value: number, decimals: number, unit?: string) {
@@ -33,6 +34,7 @@ export default function CombatantStatsPanel({
   powerLevel,
   inventory,
   keyItems,
+  buffs,
 }: CombatantStatsPanelProps) {
   return (
     <div className="flex w-full max-w-2xl flex-col">
@@ -69,12 +71,18 @@ export default function CombatantStatsPanel({
               <th className="py-1 text-right font-semibold">Base</th>
               <th className="py-1 text-right font-semibold">Core</th>
               <th className="py-1 text-right font-semibold">Equip</th>
+              <th className="py-1 text-right font-semibold">Buff</th>
               <th className="py-1 text-right font-semibold">Total</th>
             </tr>
           </thead>
           <tbody>
             {COMBAT_STATS.map((stat) => {
-              const { total, base, core, equip } = getCombatStatBreakdown(stat.key, stats, inventory)
+              const { total, base, core, equip, buff } = getCombatStatBreakdown(
+                stat.key,
+                stats,
+                inventory,
+                buffs,
+              )
               const decimals = stat.decimals ?? 0
               const isTotalBold = total !== base
               return (
@@ -90,6 +98,9 @@ export default function CombatantStatsPanel({
                   </td>
                   <td className={`py-1 text-right tabular-nums ${signedColor(equip)}`}>
                     {formatSigned(equip, decimals, stat.unit)}
+                  </td>
+                  <td className={`py-1 text-right tabular-nums ${signedColor(buff)}`}>
+                    {formatSigned(buff, decimals, stat.unit)}
                   </td>
                   <td className={`py-1 text-right tabular-nums ${isTotalBold ? 'font-bold' : ''}`}>
                     {formatValue(total, decimals, stat.unit)}

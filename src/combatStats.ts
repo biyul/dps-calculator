@@ -24,12 +24,18 @@ export const COMBAT_STATS: CombatStat[] = [
   { key: 'healthReg', label: 'HP Regen', unit: '%' },
   { key: 'mpRegen', label: 'MP Regen' },
   { key: 'speed', label: 'Speed', unit: '%' },
+  { key: 'xpGain', label: 'XP Gain', unit: '%' },
 ]
+
+// Buffs are temporary bonuses (e.g. Well Rested) layered on top of a combatant's
+// normal stats. Keyed by Combat Stat key, e.g. { xpGain: 25 }.
+export type BuffValues = Partial<Record<string, number>>
 
 export function getCombatStat(
   key: string,
   stats: StatValues,
   inventory: InventoryItem[] = [],
+  buffs: BuffValues = {},
 ): number {
   switch (key) {
     case 'attack':
@@ -61,6 +67,8 @@ export function getCombatStat(
         getEquipmentTotal(inventory, 'speed') +
         getEquipmentModTotal(inventory, 'speed')
       )
+    case 'xpGain':
+      return 100 + (buffs.xpGain ?? 0)
     default:
       throw new Error(`Unknown combat stat: ${key}`)
   }
@@ -115,19 +123,22 @@ export interface CombatStatBreakdown {
   base: number
   core: number
   equip: number
+  buff: number
 }
 
 // Total is the same value getCombatStat returns; Base is whatever's left over
-// once the Core Stat and Equipment contributions are accounted for, so the
-// three columns always add up exactly to Total.
+// once the Core Stat, Equipment, and Buff contributions are accounted for, so
+// the four columns always add up exactly to Total.
 export function getCombatStatBreakdown(
   key: string,
   stats: StatValues,
   inventory: InventoryItem[] = [],
+  buffs: BuffValues = {},
 ): CombatStatBreakdown {
-  const total = getCombatStat(key, stats, inventory)
+  const total = getCombatStat(key, stats, inventory, buffs)
   const core = getCoreBonus(key, stats)
   const equip = getEquipBonus(key, inventory)
-  const base = total - core - equip
-  return { total, base, core, equip }
+  const buff = buffs[key] ?? 0
+  const base = total - core - equip - buff
+  return { total, base, core, equip, buff }
 }
