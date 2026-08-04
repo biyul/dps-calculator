@@ -7,6 +7,7 @@ interface TownBuildingCardProps {
   name: string
   locked?: boolean
   description?: string
+  disabled?: boolean
   children?: ReactNode
 }
 
@@ -14,6 +15,7 @@ export default function TownBuildingCard({
   name,
   locked = true,
   description,
+  disabled,
   children,
 }: TownBuildingCardProps) {
   return (
@@ -27,7 +29,7 @@ export default function TownBuildingCard({
       )}
       {description && <p className="text-sm text-muted-foreground">{description}</p>}
       {locked ? (
-        <Button type="button" onClick={() => {}} className="w-full">
+        <Button type="button" onClick={() => {}} disabled={disabled} className="w-full">
           Build
         </Button>
       ) : (

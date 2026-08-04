@@ -28,6 +28,7 @@ import LevelUpCard from './components/LevelUpCard.tsx'
 import EventLog from './components/EventLog.tsx'
 import EventColumns from './components/EventColumns.tsx'
 import { Button } from '@/components/ui/button'
+import { Status } from '@/components/ui/status'
 import { Stepper } from '@/components/ui/stepper'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
@@ -100,6 +101,7 @@ function App() {
   const [playerHp, setPlayerHp] = useState<number | null>(null)
   const [showLevelUp, setShowLevelUp] = useState(false)
   const [days, setDays] = useState(1)
+  const [inDungeon, setInDungeon] = useState(false)
   const [debugMode, setDebugMode] = useState(false)
   const [activeDungeonKey, setActiveDungeonKey] = useState<string | null>(null)
   const [dungeonStageIndex, setDungeonStageIndex] = useState(0)
@@ -156,6 +158,7 @@ function App() {
     const stage = dungeon.stages[stageIndex]
     if (stageIndex === dungeon.stages.length - 1) {
       setDays((prev) => prev + 1)
+      setInDungeon(false)
     }
     if (stage?.type === 'fight') {
       const preset = FOE_PRESETS.find((p) => p.key === stage.foeKey)
@@ -183,6 +186,7 @@ function App() {
     setActiveDungeonKey(dungeon.key)
     setDungeonStageIndex(0)
     setTreasureReward(null)
+    setInDungeon(true)
     enterDungeonStage(dungeon, 0)
   }
 
@@ -205,6 +209,7 @@ function App() {
     setTimeline([])
     setEarnings(null)
     setTreasureReward(null)
+    setInDungeon(false)
   }
 
   function handleRest() {
@@ -344,14 +349,18 @@ function App() {
 
       <nav className="mb-8 flex justify-center gap-2">
         {NAV_ITEMS.map((item) => (
-          <Button
-            key={item.key}
-            type="button"
-            variant={screen === item.key ? 'default' : 'outline'}
-            onClick={() => setScreen(item.key)}
-          >
-            {item.label}
-          </Button>
+          <div key={item.key} className="relative">
+            <Button
+              type="button"
+              variant={screen === item.key ? 'default' : 'outline'}
+              onClick={() => setScreen(item.key)}
+            >
+              {item.label}
+            </Button>
+            {item.key === 'fight' && inDungeon && (
+              <Status color="red" className="absolute -top-1 -right-1" />
+            )}
+          </div>
         ))}
       </nav>
 
@@ -554,12 +563,17 @@ function App() {
 
       {screen === 'town' && (
         <div className="mx-auto flex max-w-375 flex-col items-center gap-6">
+          {inDungeon && (
+            <div className="w-full max-w-2xl rounded-lg border border-red-500/50 bg-red-500/10 p-3 text-center text-sm font-semibold text-red-600">
+              You are currently in a dungeon and cannot use any of the town facilities.
+            </div>
+          )}
           <div className="flex flex-wrap items-stretch justify-center gap-6">
             <TownBuildingCard name="Inn" locked={false} description="Rest here to fully recover your HP.">
               <Button
                 type="button"
                 onClick={handleRest}
-                disabled={playerCurrentHp >= playerMaxHp}
+                disabled={inDungeon || playerCurrentHp >= playerMaxHp}
                 className="w-full"
               >
                 Rest
@@ -568,15 +582,16 @@ function App() {
                 type="button"
                 variant={showLevelUp ? 'default' : 'outline'}
                 onClick={() => setShowLevelUp((v) => !v)}
+                disabled={inDungeon}
                 className="w-full"
               >
                 Level Up
               </Button>
             </TownBuildingCard>
-            <TownBuildingCard name="Town Hall" />
-            <TownBuildingCard name="Market" />
-            <TownBuildingCard name="Academy" />
-            <TownBuildingCard name="Blacksmith" />
+            <TownBuildingCard name="Town Hall" disabled={inDungeon} />
+            <TownBuildingCard name="Market" disabled={inDungeon} />
+            <TownBuildingCard name="Academy" disabled={inDungeon} />
+            <TownBuildingCard name="Blacksmith" disabled={inDungeon} />
           </div>
           {showLevelUp && (
             <LevelUpCard
